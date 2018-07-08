@@ -1,5 +1,6 @@
 apply plugin: "java-library"
 apply plugin: "maven-publish"
+apply plugin: "jacoco"
 
 publishing {
     publications {
@@ -7,6 +8,13 @@ publishing {
             from components.java
             artifact sourcesJar
         }
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled = true
+        html.enabled = true
     }
 }
 
@@ -28,3 +36,5 @@ task sourcesJar(type: Jar) {
     classifier = "sources"
     from sourceSets.main.allSource
 }
+
+check.dependsOn jacocoTestReport
