@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.com/gustavkarlsson/krate.svg?branch=master)](https://travis-ci.com/gustavkarlsson/krate)
 [![codecov](https://codecov.io/gh/gustavkarlsson/krate/branch/master/graph/badge.svg)](https://codecov.io/gh/gustavkarlsson/krate)
+[![codebeat badge](https://codebeat.co/badges/ee4f1e26-fca2-420a-ac9a-e0af088242be)](https://codebeat.co/projects/github-com-gustavkarlsson-krate-master)
 [![Version](https://jitpack.io/v/gustavkarlsson/krate.svg)](https://jitpack.io/#gustavkarlsson/krate)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/gustavkarlsson/krate/blob/master/LICENSE.md)
 
