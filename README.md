@@ -1,4 +1,5 @@
-[![](https://jitpack.io/v/gustavkarlsson/krate.svg)](https://jitpack.io/#gustavkarlsson/krate)
+[![Build Status](https://travis-ci.com/gustavkarlsson/krate.svg?branch=master)](https://travis-ci.com/gustavkarlsson/krate)
+[![Version](https://jitpack.io/v/gustavkarlsson/krate.svg)](https://jitpack.io/#gustavkarlsson/krate)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/gustavkarlsson/krate/blob/master/LICENSE.md)
 
 # Krate
