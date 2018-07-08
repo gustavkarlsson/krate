@@ -1,0 +1,8 @@
+apply plugin: "application"
+
+mainClassName = "se.gustavkarlsson.krate.sample.MainKt"
+
+dependencies {
+    implementation project(":core")
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+}

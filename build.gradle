@@ -1,0 +1,77 @@
+buildscript {
+    ext {
+        // Misc
+        kotlin_version = "1.2.51"
+        release_plugin_version = "1.9.2"
+
+        // Implementation
+        rxjava_version = "2.1.16"
+        rxkotlin_version = "2.2.0"
+        rxrelay_version = "2.0.0"
+
+        // Test
+        junit_version = "4.12"
+        assertk_version = "0.10"
+        mockito_version = "2.19.0"
+        mockito_kotlin_version = "2.0.0-RC1"
+
+        // Other
+        ktlint_version = "0.24.0"
+    }
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "pl.allegro.tech.build:axion-release-plugin:$release_plugin_version"
+    }
+}
+
+apply plugin: "pl.allegro.tech.build.axion-release"
+
+allprojects {
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: "kotlin"
+
+    group = "se.gustavkarlsson.krate"
+    version = scmVersion.version
+    sourceCompatibility = "1.7"
+    targetCompatibility = "1.7"
+}
+
+scmVersion {
+    tag {
+        prefix = ''
+    }
+}
+
+configurations {
+    ktlint
+}
+
+dependencies {
+    ktlint "com.github.shyiko:ktlint:$ktlint_version"
+}
+
+task ktlint(type: JavaExec, group: "verification") {
+    description = "Check Kotlin code style."
+    main = "com.github.shyiko.ktlint.Main"
+    classpath = configurations.ktlint
+    args "*/src/**/*.kt"
+}
+
+task check(group: "verification", dependsOn: ktlint)
+
+task ktlintFormat(type: JavaExec, group: "formatting") {
+    description = "Fix Kotlin code style deviations."
+    main = "com.github.shyiko.ktlint.Main"
+    classpath = configurations.ktlint
+    args "-F", "*/src/**/*.kt"
+}

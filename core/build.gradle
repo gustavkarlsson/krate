@@ -1,0 +1,30 @@
+apply plugin: "java-library"
+apply plugin: "maven-publish"
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+        }
+    }
+}
+
+dependencies {
+    // Main
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "com.jakewharton.rxrelay2:rxrelay:$rxrelay_version"
+    implementation "io.reactivex.rxjava2:rxkotlin:$rxkotlin_version"
+    api "io.reactivex.rxjava2:rxjava:$rxjava_version"
+
+    // Test
+    testImplementation "junit:junit:$junit_version"
+    testImplementation "org.mockito:mockito-core:$mockito_version"
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockito_kotlin_version", { exclude group: "org.jetbrains.kotlin" }
+    testImplementation "com.willowtreeapps.assertk:assertk:$assertk_version", { exclude group: "org.jetbrains.kotlin" }
+}
+
+task sourcesJar(type: Jar) {
+    classifier = "sources"
+    from sourceSets.main.allSource
+}
