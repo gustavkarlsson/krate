@@ -20,7 +20,7 @@ but also [Flux](https://facebook.github.io/flux/) and [Redux](https://redux.js.o
 
 ## Including
 
-Krate is hosted on Jitpack. Here's how you include it in your gradle project:
+Krate is hosted on JitPack. Here's how you include it in your gradle project:
 
 **Step 1.** Add the JitPack repository to your build file:
 
