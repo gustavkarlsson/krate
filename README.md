@@ -1,3 +1,6 @@
+[![](https://jitpack.io/v/gustavkarlsson/krate.svg)](https://jitpack.io/#gustavkarlsson/krate)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/gustavkarlsson/krate/blob/master/LICENSE.md)
+
 # Krate
 
 Krate is a reactive state management library for JVM applications written for Kotlin and RxJava.
