@@ -12,8 +12,8 @@ object NotesApi {
     private val nextId = AtomicLong(3)
 
     fun addNote(text: String, important: Boolean): Single<Note> {
-        return if (text.hashCode() % 3 == 0) {
-            Single.error(Exception("Failed to add note"))
+        return if (text.hashCode() % 2 == 0) {
+            Single.error(Exception("Failed to add note: '$text'"))
         } else {
             Single.just(Note(nextId.getAndIncrement(), text, important))
         }
