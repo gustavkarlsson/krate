@@ -1,18 +1,19 @@
 package se.gustavkarlsson.krate.core
 
-import io.reactivex.Observable
+import Reducer
+import Transformer
+import Watcher
 import io.reactivex.Scheduler
-import kotlin.reflect.KClass
+import io.reactivex.rxkotlin.ofType
 
 class StoreBuilder<State : Any, Command : Any, Result : Any>
 internal constructor() {
     private var initialState: State? = null
-    private val transformers =
-        mutableListOf<Transformer<State, Command, Result>>()
-    private val reducers =
-        mutableListOf<Reducer<State, Result>>()
-    private val finalReducers =
-        mutableListOf<Reducer<State, Result>>()
+    private val transformers = mutableListOf<Transformer<State, Command, Result>>()
+    private val reducers = mutableListOf<Reducer<State, Result>>()
+    private val commandWatchers = mutableListOf<Watcher<Command>>()
+    private val resultWatchers = mutableListOf<Watcher<Result>>()
+    private val stateWatchers = mutableListOf<Watcher<State>>()
     private var observeScheduler: Scheduler? = null
 
     /**
@@ -25,37 +26,51 @@ internal constructor() {
     }
 
     /**
-     * Adds a transformer to the store. A transformer converts commands of type [C] to results.
+     * Adds a transformer to the store.
      *
-     * @param type the type of commands to transform
-     * @param transformer the transformer
+     * A transformer converts commands to results.
+     *
+     * @param transform the transformer function
      */
-    fun <C : Command> addTransformer(type: Class<C>, transformer: Transformer<State, C, Result>) {
-        transformers += { commands: Observable<Command>, getState ->
-            transformer(commands.ofType(type), getState)
-        }
+    fun transform(transform: Transformer<State, Command, Result>) {
+        transformers += transform
     }
 
     /**
-     * Adds a transformer to the store. A transformer converts commands of type [C] to results.
+     * Adds a typed transformer to the store.
      *
-     * @param transformer the transformer
+     * A typed transformer converts commands of type [C] to results.
+     *
+     * @param C the type of commands to transform
+     * @param transform the transformer function
      */
-    inline fun <reified C : Command> addTransformer(noinline transformer: Transformer<State, C, Result>) {
-        addTransformer(C::class.java, transformer)
+    inline fun <reified C : Command> transformByType(noinline transform: Transformer<State, C, Result>) {
+        transform { getState ->
+            ofType<C>().transform(getState)
+        }
     }
 
     /**
      * Adds a reducer to the store.
      *
-     * A reducer takes the current state of the store and a result of type [R] to produce a new state.
+     * A reducer takes the current state of the store and a result to produce a new state.
      *
-     * @param type the type of results to use for creating new states
-     * @param reduce the reducer
+     * @param reduce the reducer function
      */
-    fun <R : Result> addReducer(type: KClass<R>, reduce: (State, R) -> State) {
-        reducers += { currentState, result ->
-            if (type.java.isInstance(result)) {
+    fun reduce(reduce: Reducer<State, Result>) {
+        reducers += reduce
+    }
+
+    /**
+     * Adds a typed reducer to the store.
+     *
+     * A typed reducer takes the current state of the store and a result of type [R] to produce a new state.
+     *
+     * @param reduce the reducer function
+     */
+    inline fun <reified R : Result> reduceByType(noinline reduce: (State, R) -> State) {
+        reduce { currentState, result ->
+            if (R::class.java.isInstance(result)) {
                 @Suppress("UNCHECKED_CAST")
                 reduce(currentState, result as R)
             } else {
@@ -65,45 +80,83 @@ internal constructor() {
     }
 
     /**
-     * Adds a reducer to the store.
+     * Adds a command watcher to the store.
      *
-     * A reducer takes the current state of the store and a result of type [R] to produce a new state.
+     * A command watcher runs on each processed command
      *
-     * @param reduce the reducer
+     * @param watch the watcher function
      */
-    inline fun <reified R : Result> addReducer(noinline reduce: (State, R) -> State) {
-        addReducer(R::class, reduce)
+    fun watchCommands(watch: Watcher<Command>) {
+        commandWatchers += watch
     }
 
     /**
-     * Adds a listener that gets called for every issued command of type [C]
+     * Adds a typed command watcher to the store.
+     *
+     * A typed command watcher runs on each processed command of type [C]
+     *
+     * @param watch the watcher function
      */
-    inline fun <reified C : Command> addCommandListener(crossinline block: (C) -> Unit) {
-        addTransformer<C> { commands, _ ->
-            commands.flatMap {
-                block(it)
-                Observable.empty<Result>()
+    inline fun <reified C : Command> watchCommandsByType(noinline watch: Watcher<C>) {
+        watchCommands { command ->
+            if (C::class.java.isInstance(command)) {
+                @Suppress("UNCHECKED_CAST")
+                watch(command as C)
             }
         }
     }
 
     /**
-     * Adds a listener that gets called for every produced result type [R]
+     * Adds a result watcher to the store.
+     *
+     * A result watcher runs on each processed command
+     *
+     * @param watch the watcher function
      */
-    inline fun <reified R : Result> addResultListener(crossinline block: (R) -> Unit) {
-        addReducer { state: State, result: R ->
-            block(result)
-            state
+    fun watchResults(watch: Watcher<Result>) {
+        resultWatchers += watch
+    }
+
+    /**
+     * Adds a typed result watcher to the store.
+     *
+     * A typed result watcher runs on each processed result of type [R]
+     *
+     * @param watch the watcher function
+     */
+    inline fun <reified R : Result> watchResultsByType(noinline watch: Watcher<R>) {
+        watchResults { result ->
+            if (R::class.java.isInstance(result)) {
+                @Suppress("UNCHECKED_CAST")
+                watch(result as R)
+            }
         }
     }
 
     /**
-     * Adds a listener that gets called for every state change
+     * Adds a state watcher to the store.
+     *
+     * A state watcher runs on each processed state
+     *
+     * @param watch the watcher function
      */
-    fun addStateListener(block: (State) -> Unit) {
-        finalReducers += { state, _ ->
-            block(state)
-            state
+    fun watchStates(watch: Watcher<State>) {
+        stateWatchers += watch
+    }
+
+    /**
+     * Adds a typed state watcher to the store.
+     *
+     * A typed state watcher runs on each processed state of type [S]
+     *
+     * @param watch the watcher function
+     */
+    inline fun <reified S : State> watchStatesByType(noinline watch: Watcher<S>) {
+        watchStates { state ->
+            if (S::class.java.isInstance(state)) {
+                @Suppress("UNCHECKED_CAST")
+                watch(state as S)
+            }
         }
     }
 
@@ -112,18 +165,21 @@ internal constructor() {
      *
      * @param scheduler the scheduler, or null if no specific scheduler should be used
      */
-    fun setObserveScheduler(scheduler: Scheduler?) {
+    fun observeOn(scheduler: Scheduler?) {
         observeScheduler = scheduler
     }
 
     internal fun build(): Store<State, Command, Result> {
-        val initialState = initialState ?: throw IllegalStateException("No initial state set")
-        if (transformers.isEmpty()) throw IllegalStateException("No transformers defined")
-        if (reducers.isEmpty()) throw IllegalStateException("No reducers defined")
+        val initialState = checkNotNull(initialState) { "No initial state set" }
+        check(!transformers.isEmpty()) { "No transformers defined" }
+        check(!reducers.isEmpty()) { "No reducers defined" }
         return Store(
             initialState,
             transformers,
-            reducers + finalReducers,
+            reducers,
+            commandWatchers,
+            resultWatchers,
+            stateWatchers,
             observeScheduler
         )
     }

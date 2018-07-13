@@ -1,5 +1,7 @@
 package se.gustavkarlsson.krate.core
 
+import Reducer
+
 internal class CompositeReducer<State : Any, Result : Any>(
     private val reducers: Iterable<Reducer<State, Result>>
 ) : Reducer<State, Result> {
