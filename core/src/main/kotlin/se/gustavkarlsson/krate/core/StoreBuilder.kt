@@ -4,7 +4,6 @@ import Reducer
 import Transformer
 import Watcher
 import io.reactivex.Scheduler
-import io.reactivex.rxkotlin.ofType
 
 class StoreBuilder<State : Any, Command : Any, Result : Any>
 internal constructor() {
@@ -45,9 +44,7 @@ internal constructor() {
      * @param transform the transformer function
      */
     inline fun <reified C : Command> transformByType(noinline transform: Transformer<State, C, Result>) {
-        transform { getState ->
-            ofType<C>().transform(getState)
-        }
+        transform(TypedTransformer(C::class, transform))
     }
 
     /**
@@ -70,7 +67,7 @@ internal constructor() {
      */
     inline fun <reified R : Result> reduceByType(noinline reduce: (State, R) -> State) {
         reduce { currentState, result ->
-            if (R::class.java.isInstance(result)) {
+            if (R::class.javaObjectType.isInstance(result)) {
                 @Suppress("UNCHECKED_CAST")
                 reduce(currentState, result as R)
             } else {
@@ -99,7 +96,7 @@ internal constructor() {
      */
     inline fun <reified C : Command> watchCommandsByType(noinline watch: Watcher<C>) {
         watchCommands { command ->
-            if (C::class.java.isInstance(command)) {
+            if (C::class.javaObjectType.isInstance(command)) {
                 @Suppress("UNCHECKED_CAST")
                 watch(command as C)
             }
@@ -126,7 +123,7 @@ internal constructor() {
      */
     inline fun <reified R : Result> watchResultsByType(noinline watch: Watcher<R>) {
         watchResults { result ->
-            if (R::class.java.isInstance(result)) {
+            if (R::class.javaObjectType.isInstance(result)) {
                 @Suppress("UNCHECKED_CAST")
                 watch(result as R)
             }
