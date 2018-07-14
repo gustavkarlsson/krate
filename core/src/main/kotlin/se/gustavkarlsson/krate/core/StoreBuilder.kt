@@ -66,14 +66,7 @@ internal constructor() {
      * @param reduce the reducer function
      */
     inline fun <reified R : Result> reduceByType(noinline reduce: (State, R) -> State) {
-        reduce { currentState, result ->
-            if (R::class.javaObjectType.isInstance(result)) {
-                @Suppress("UNCHECKED_CAST")
-                reduce(currentState, result as R)
-            } else {
-                currentState
-            }
-        }
+        reduce(TypedReducer(R::class, reduce))
     }
 
     /**
