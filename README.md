@@ -6,7 +6,7 @@
 
 # Krate
 
-Krate is a reactive state management library for JVM applications written for Kotlin and RxJava.
+Krate is a reactive state management library for Kotlin and RxJava.
 It's heavily inspired by
 [This talk by Jake Wharton](https://jakewharton.com/the-state-of-managing-state-with-rxjava/)
 but also [Flux](https://facebook.github.io/flux/) and [Redux](https://redux.js.org).
