@@ -54,7 +54,7 @@ the appropriate results.
 ### Reducers
 
 A reducer is a function that takes 2 arguments: The current state and a result of some given type, and generates a new
-state from that. All reducers run sequentially to guarantee that the state is consistently updated.
+state from that. All reducers run sequentially to guarantee that the state is updated in a predictable manner.
 
 ### Store
 
@@ -65,19 +65,21 @@ commands to transformers, results to reducers, and state updates to its subscrib
 
 ## A simple example
 
-We'll create a very simple application with a counter. The counter starts at 100 and counts down towards 0.
+Let's create a very simple application with a counter.
+The counter starts at 100 and using buttons we can count it down towards 0.
 At any time it can also be reset back to 100.
 
 **State**
 
-The state is a simple data class with a property defaulted to 100.
+The state is a simple data class with a count property. Note that it is immutable.
 ```kotlin
-data class State(val count: Int = 100)
+data class State(val count: Int)
 ```
 
 **Commands**
 
-For the commands, we're using a sealed class and two inner classes (once of which is a singleton object).
+For the commands, we define a single parent class and two subclasses,
+one for resetting the counter and one for counting down.
 ```kotlin
 sealed class Command {
     object Reset : Command()
@@ -87,11 +89,12 @@ sealed class Command {
 
 **Results**
 
-The results contain all the information necessary to create a new state state.
+The results are created similarly to the commands and contain all the information necessary to create a new state state.
+One sets the count to a specific value, and the other adjusts it by some amount.
 ```kotlin
 sealed class Result {
-    data class AdjustCount(val adjustment: Int) : Result()
     data class NewCount(val newCount: Int) : Result()
+    data class AdjustCount(val amount: Int) : Result()
 }
 ```
 
@@ -101,34 +104,34 @@ To create the store, we use a builder function and give it our state, command, a
 ```kotlin
 val store = buildStore<State, Command, Result> {
     
-    setInitialState(State())
+    setInitialState(State(100))
     
     // Transformers
     
     // Reducers
 }
 ```
+We also initialize the state with the counter set to 100.
 
 **Transformers**
 
-We will need two transformers. The first one is for resets:
+We will need two transformers. The first one handles resets:
 
 ```kotlin
-addTransformer<Command.Reset> { commands, _ ->
-    commands.map { Result.NewCount(100) }
+transformByType<Command.Reset> {
+    map { Result.NewCount(100) }
 }
 ```
 
-The transformer is a lambda that takes an `Observable<Command.Reset>` named `commands` and a function that can be used to
-gain access to the current state (not used here, so `_`). The body transforms the commands into results.
+The transformer is a lambda with a receiver type of `Observable<Command.Reset>`.
+The body transforms the commands into results using the RxJava `map` operator.
 In this case, every command generates exactly one result, but using operators such as `flatMap` we could asynchronously
-generate multiple results.
+generate any number of results.
 
-The second transformer is more complex and uses data from each command to generate results:
+The second transformer is a bit more complex and uses data from each command to generate results:
 ```kotlin
-addTransformer<Command.CountDown> { commands, _ ->
-    commands
-        .map { it.amount }
+transformByType<Command.CountDown> {
+    map { it.amount }
         .filter { it > 0 }
         .map { Result.AdjustCount(-it) }
 }
@@ -141,17 +144,18 @@ Here we also see a filter preventing the countdown from going up by ignoring non
 Our first reducer is very simple and sets the counter to whatever the result contains:
 
 ```kotlin
-addReducer<Result.NewCount> { _, result ->
+reduceByType<Result.NewCount> { _, result ->
     State(result.newCount)
 }
 ```
 
-The state parameter is ignored here because we don't care about the previous state when setting a new count.
+The first parameter (state) is ignored here because we don't care about the previous state when setting a new count.
 
-For our second reducer, we will use the existing state to generate the new state (with a safeguard to avoid negative numbers):
+For our second reducer, we will use the existing state to generate the new state
+(with a safeguard to avoid negative numbers):
 
 ```kotlin
-addReducer<Result.AdjustCount> { state, result ->
+reduceByType<Result.AdjustCount> { state, result ->
     val newCount = max(state.count + result.adjustment, 0)
     State(newCount)
 }
@@ -185,7 +189,7 @@ After starting the store, we can add as many subscribers as we wish. They will i
 and then all state updates that follow.
 
 
-## Including
+## Download
 
 Krate is hosted on JitPack. Here's how you include it in your gradle project:
 
@@ -204,7 +208,7 @@ allprojects {
 
 ```groovy
 dependencies {
-    implementation "com.github.gustavkarlsson:krate:<latest_version>"
+    implementation 'com.github.gustavkarlsson:krate:<latest_version>'
 }
 ```
 
