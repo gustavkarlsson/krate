@@ -145,22 +145,6 @@ internal constructor() {
     }
 
     /**
-     * Adds a typed state watcher to the store.
-     *
-     * A typed state watcher runs on each processed state of type [S]
-     *
-     * @param watch the watcher function
-     */
-    inline fun <reified S : State> watchStatesByType(noinline watch: Watcher<S>) {
-        watchStates { state ->
-            if (S::class.java.isInstance(state)) {
-                @Suppress("UNCHECKED_CAST")
-                watch(state as S)
-            }
-        }
-    }
-
-    /**
      * Sets a scheduler that will be used to observe state changes.
      *
      * @param scheduler the scheduler, or null if no specific scheduler should be used

@@ -21,12 +21,12 @@ import io.reactivex.schedulers.Schedulers
 class Store<State : Any, Command : Any, Result : Any>
 internal constructor(
     initialState: State,
-    transformers: List<Transformer<State, Command, Result>>,
-    reducers: List<Reducer<State, Result>>,
-    commandWatchers: List<Watcher<Command>>,
-    resultWatchers: List<Watcher<Result>>,
-    stateWatchers: List<Watcher<State>>,
-    observeScheduler: Scheduler?,
+    internal val transformers: List<Transformer<State, Command, Result>>,
+    internal val reducers: List<Reducer<State, Result>>,
+    internal val commandWatchers: List<Watcher<Command>>,
+    internal val resultWatchers: List<Watcher<Result>>,
+    internal val stateWatchers: List<Watcher<State>>,
+    internal val observeScheduler: Scheduler?,
     reduceScheduler: Scheduler = Schedulers.newThread()
 ) {
     private var internalSubscription: Disposable? = null
