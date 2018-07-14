@@ -1,5 +1,8 @@
 package se.gustavkarlsson.krate.core
 
+import Reducer
+import Transformer
+import Watcher
 import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.Observable
 import io.reactivex.Scheduler
@@ -20,6 +23,9 @@ internal constructor(
     initialState: State,
     transformers: List<Transformer<State, Command, Result>>,
     reducers: List<Reducer<State, Result>>,
+    commandWatchers: List<Watcher<Command>>,
+    resultWatchers: List<Watcher<Result>>,
+    stateWatchers: List<Watcher<State>>,
     observeScheduler: Scheduler?,
     reduceScheduler: Scheduler = Schedulers.newThread()
 ) {
@@ -49,10 +55,13 @@ internal constructor(
     private val commands = PublishRelay.create<Command>()
 
     private val results = commands
+        .doOnNext { command ->
+            commandWatchers.forEach { watch -> watch(command) }
+        }
         .publish { commands ->
             transformers
                 .map { transform ->
-                    transform(commands, ::currentState)
+                    commands.transform(::currentState)
                 }
                 .let {
                     Observable.merge(it)
@@ -60,6 +69,9 @@ internal constructor(
         }
 
     private val connectableStates = results
+        .doOnNext { result ->
+            resultWatchers.forEach { watch -> watch(result) }
+        }
         .observeOn(reduceScheduler)
         .scan(initialState, CompositeReducer(reducers))
         .doOnNext { state ->
@@ -88,6 +100,9 @@ internal constructor(
      * @return An [Observable] of [State] updates
      */
     val states: Observable<State> = connectableStates
+        .doOnNext { state ->
+            stateWatchers.forEach { watch -> watch(state) }
+        }
 
     /**
      * Starts processing of this store.
