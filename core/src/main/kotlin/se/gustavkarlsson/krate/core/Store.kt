@@ -54,15 +54,7 @@ internal constructor(
 
     private val results = commands
         .watch(commandWatchers)
-        .publish { commands ->
-            transformers
-                .map { transform ->
-                    commands.transform(::currentState)
-                }
-                .let {
-                    Observable.merge(it)
-                }
-        }
+        .compose(CompositeTransformer(transformers, ::currentState))
 
     private val connectableStates = results
         .watch(resultWatchers)
@@ -73,24 +65,26 @@ internal constructor(
         .observeOnIfPresent(observeScheduler)
         .replay(1)
 
-    private fun Observable<State>.setCurrentState(): Observable<State> =
-        doOnNext { state ->
+    private fun Observable<State>.setCurrentState(): Observable<State> {
+        return doOnNext { state ->
             currentState = state
         }
+    }
 
-    private fun <T> Observable<T>.observeOnIfPresent(scheduler: Scheduler?): Observable<T> {
+    private fun Observable<State>.observeOnIfPresent(scheduler: Scheduler?): Observable<State> {
         if (scheduler != null) {
-            return this.observeOn(scheduler)
+            return observeOn(scheduler)
         }
         return this
     }
 
-    private fun <T> Observable<T>.watch(watchers: List<Watcher<T>>): Observable<T> =
-        this.doOnNext { value ->
+    private fun <T> Observable<T>.watch(watchers: List<Watcher<T>>): Observable<T> {
+        return doOnNext { value ->
             watchers.forEach { watch ->
                 watch(value)
             }
         }
+    }
 
     /**
      * An observable stream of state updates produced by this store,
