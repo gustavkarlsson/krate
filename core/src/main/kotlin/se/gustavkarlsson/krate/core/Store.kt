@@ -77,6 +77,9 @@ internal constructor(
         .doOnNext { state ->
             currentState = state
         }
+        .doOnNext {
+            stateWatchers.forEach { watch -> watch(it) }
+        }
         .let {
             if (observeScheduler != null) {
                 it.observeOn(observeScheduler)
@@ -100,9 +103,6 @@ internal constructor(
      * @return An [Observable] of [State] updates
      */
     val states: Observable<State> = connectableStates
-        .doOnNext { state ->
-            stateWatchers.forEach { watch -> watch(state) }
-        }
 
     /**
      * Starts processing of this store.
