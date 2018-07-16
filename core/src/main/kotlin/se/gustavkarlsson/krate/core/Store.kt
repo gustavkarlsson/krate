@@ -7,7 +7,6 @@ import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 
 /**
  * Manages application (sub)state by accepting commands,
@@ -26,8 +25,7 @@ internal constructor(
     internal val commandWatchers: List<Watcher<Command>>,
     internal val resultWatchers: List<Watcher<Result>>,
     internal val stateWatchers: List<Watcher<State>>,
-    internal val observeScheduler: Scheduler?,
-    reduceScheduler: Scheduler = Schedulers.newThread()
+    internal val observeScheduler: Scheduler?
 ) {
     private var internalSubscription: Disposable? = null
     private var connection: Disposable? = null
@@ -52,7 +50,7 @@ internal constructor(
         commands.accept(command)
     }
 
-    private val commands = PublishRelay.create<Command>()
+    private val commands = PublishRelay.create<Command>().toSerialized()
 
     private val results = commands
         .watch(commandWatchers)
@@ -68,7 +66,7 @@ internal constructor(
 
     private val connectableStates = results
         .watch(resultWatchers)
-        .observeOn(reduceScheduler)
+        .serialize()
         .scan(initialState, CompositeReducer(reducers))
         .doOnNext { state ->
             currentState = state
