@@ -52,18 +52,24 @@ internal constructor(
 
     private val commands = PublishRelay.create<Command>().toSerialized()
 
-    private val results = commands
+    private val connectableStates = commands
         .watch(commandWatchers)
-        .compose(CompositeTransformer(transformers, ::currentState))
-
-    private val connectableStates = results
+        .transform()
         .watch(resultWatchers)
-        .serialize()
-        .scan(initialState, CompositeReducer(reducers))
+        .reduce(initialState)
         .setCurrentState()
         .watch(stateWatchers)
-        .observeOnIfPresent(observeScheduler)
+        .setObserver()
         .replay(1)
+
+    private fun Observable<Command>.transform(): Observable<Result> {
+        return compose(CompositeTransformer(transformers, ::currentState))
+    }
+
+    private fun Observable<Result>.reduce(initialState: State): Observable<State> {
+        return serialize()
+            .scan(initialState, CompositeReducer(reducers))
+    }
 
     private fun Observable<State>.setCurrentState(): Observable<State> {
         return doOnNext { state ->
@@ -71,11 +77,10 @@ internal constructor(
         }
     }
 
-    private fun Observable<State>.observeOnIfPresent(scheduler: Scheduler?): Observable<State> {
-        if (scheduler != null) {
-            return observeOn(scheduler)
-        }
-        return this
+    private fun Observable<State>.setObserver(): Observable<State> {
+        return observeScheduler?.let {
+            observeOn(it)
+        } ?: this
     }
 
     private fun <T> Observable<T>.watch(watchers: List<Watcher<T>>): Observable<T> {
