@@ -68,18 +68,14 @@ internal constructor(
         .watch(resultWatchers)
         .serialize()
         .scan(initialState, CompositeReducer(reducers))
-        .doOnNext { state ->
-            currentState = state
-        }
+        .setCurrentState()
         .watch(stateWatchers)
         .observeOnIfPresent(observeScheduler)
         .replay(1)
 
-    private fun <T> Observable<T>.watch(watchers: List<Watcher<T>>): Observable<T> =
-        this.doOnNext { value ->
-            watchers.forEach { watch ->
-                watch(value)
-            }
+    private fun Observable<State>.setCurrentState(): Observable<State> =
+        doOnNext { state ->
+            currentState = state
         }
 
     private fun <T> Observable<T>.observeOnIfPresent(scheduler: Scheduler?): Observable<T> {
@@ -88,6 +84,13 @@ internal constructor(
         }
         return this
     }
+
+    private fun <T> Observable<T>.watch(watchers: List<Watcher<T>>): Observable<T> =
+        this.doOnNext { value ->
+            watchers.forEach { watch ->
+                watch(value)
+            }
+        }
 
     /**
      * An observable stream of state updates produced by this store,
