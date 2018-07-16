@@ -77,8 +77,8 @@ internal constructor(
         .doOnNext { state ->
             currentState = state
         }
-        .doOnNext {
-            stateWatchers.forEach { watch -> watch(it) }
+        .doOnNext { state ->
+            stateWatchers.forEach { watch -> watch(state) }
         }
         .let {
             if (observeScheduler != null) {
