@@ -4,4 +4,4 @@ internal typealias Transformer<State, Command, Result> = Observable<Command>.(()
 
 internal typealias Reducer<State, Result> = (State, Result) -> State
 
-internal typealias Watcher<Command> = (Command) -> Unit
+internal typealias Watcher<Type> = (Type) -> Unit
