@@ -12,9 +12,6 @@ class TypedWatcher<Type : Any, T : Type>(
 ) : Watcher<Type> {
 
     override fun invoke(value: Type) {
-        if (type.javaObjectType.isInstance(null)) {
-            @Suppress("UNCHECKED_CAST")
-            watch(value as T)
-        }
+        value.ifObjectInstanceOf(type, watch)
     }
 }

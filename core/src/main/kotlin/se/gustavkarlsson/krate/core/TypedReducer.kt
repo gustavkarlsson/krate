@@ -12,11 +12,8 @@ class TypedReducer<State : Any, Result : Any, R : Result>(
 ) : Reducer<State, Result> {
 
     override fun invoke(state: State, result: Result): State {
-        return if (type.javaObjectType.isInstance(result)) {
-            @Suppress("UNCHECKED_CAST")
-            reduce(state, result as R)
-        } else {
-            state
-        }
+        return result.ifObjectInstanceOf(type) {
+            reduce(state, it)
+        } ?: state
     }
 }
