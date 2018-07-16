@@ -72,13 +72,7 @@ internal constructor(
             currentState = state
         }
         .watch(stateWatchers)
-        .let {
-            if (observeScheduler != null) {
-                it.observeOn(observeScheduler)
-            } else {
-                it
-            }
-        }
+        .observeOnIfPresent(observeScheduler)
         .replay(1)
 
     private fun <T> Observable<T>.watch(watchers: List<Watcher<T>>): Observable<T> =
@@ -87,6 +81,13 @@ internal constructor(
                 watch(value)
             }
         }
+
+    private fun <T> Observable<T>.observeOnIfPresent(scheduler: Scheduler?): Observable<T> {
+        if (scheduler != null) {
+            return this.observeOn(scheduler)
+        }
+        return this
+    }
 
     /**
      * An observable stream of state updates produced by this store,
