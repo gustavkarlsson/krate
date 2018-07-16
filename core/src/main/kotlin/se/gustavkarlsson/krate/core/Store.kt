@@ -55,9 +55,7 @@ internal constructor(
     private val commands = PublishRelay.create<Command>()
 
     private val results = commands
-        .doOnNext { command ->
-            commandWatchers.forEach { watch -> watch(command) }
-        }
+        .watch(commandWatchers)
         .publish { commands ->
             transformers
                 .map { transform ->
@@ -69,17 +67,13 @@ internal constructor(
         }
 
     private val connectableStates = results
-        .doOnNext { result ->
-            resultWatchers.forEach { watch -> watch(result) }
-        }
+        .watch(resultWatchers)
         .observeOn(reduceScheduler)
         .scan(initialState, CompositeReducer(reducers))
         .doOnNext { state ->
             currentState = state
         }
-        .doOnNext { state ->
-            stateWatchers.forEach { watch -> watch(state) }
-        }
+        .watch(stateWatchers)
         .let {
             if (observeScheduler != null) {
                 it.observeOn(observeScheduler)
@@ -88,6 +82,13 @@ internal constructor(
             }
         }
         .replay(1)
+
+    private fun <T> Observable<T>.watch(watchers: List<Watcher<T>>): Observable<T> =
+        this.doOnNext { value ->
+            watchers.forEach { watch ->
+                watch(value)
+            }
+        }
 
     /**
      * An observable stream of state updates produced by this store,
