@@ -16,7 +16,7 @@ import org.junit.Test
 class StoreTest {
     private val initialState = NotesState()
 
-    private val transformerNote2 = Note("transformer2 note")
+    private val transformer2Result = NoteCreated(Note("transformer2 note"))
 
     private val reducer1Note = Note("reducer1 note")
 
@@ -34,7 +34,7 @@ class StoreTest {
     private val mockTransformer2 = mock<Transformer<NotesState, NotesCommand, NotesResult>> {
         on(it.invoke(any(), any())).thenAnswer {
             val commands = it.arguments[0] as Observable<*>
-            commands.map { NoteCreated(transformerNote2) }
+            commands.map { transformer2Result }
         }
     }
 
@@ -151,15 +151,24 @@ class StoreTest {
     }
 
     @Test
+    fun `transformers are called in order`() {
+        impl.start()
+
+        inOrder(mockTransformer1, mockTransformer2) {
+            verify(mockTransformer1).invoke(any(), any())
+            verify(mockTransformer2).invoke(any(), any())
+        }
+    }
+
+    @Test
     fun `result watchers are called in order`() {
         impl.start()
 
         impl.issue(CreateNote(""))
 
-        val expectedResult = NoteCreated(transformerNote2)
         inOrder(mockResultWatcher1, mockResultWatcher2) {
-            verify(mockResultWatcher1).invoke(expectedResult)
-            verify(mockResultWatcher2).invoke(expectedResult)
+            verify(mockResultWatcher1).invoke(transformer2Result)
+            verify(mockResultWatcher2).invoke(transformer2Result)
         }
     }
 
@@ -171,8 +180,19 @@ class StoreTest {
 
         impl.issue(CreateNote(""))
 
-        val expectedResult = NoteCreated(transformerNote2)
-        verify(mockResultWatcher1).invoke(expectedResult)
+        verify(mockResultWatcher1).invoke(transformer2Result)
+    }
+
+    @Test
+    fun `reducers are called in order`() {
+        impl.start()
+
+        impl.issue(CreateNote(""))
+
+        inOrder(mockReducer1, mockReducer2) {
+            verify(mockReducer1).invoke(initialState, transformer2Result)
+            verify(mockReducer2).invoke(NotesState(initialState.notes + reducer1Note), transformer2Result)
+        }
     }
 
     @Test
