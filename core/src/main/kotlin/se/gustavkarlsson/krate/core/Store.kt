@@ -53,7 +53,7 @@ internal constructor(
         .setCurrentState()
         .watch(stateWatchers)
         .replay(1)
-        .refCount()
+        .autoConnect()
 
     private fun Observable<Command>.transform(): Observable<Result> {
         return compose(CompositeTransformer(transformers, ::currentState))
