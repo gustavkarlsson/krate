@@ -8,10 +8,7 @@ import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import io.reactivex.Observable
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.junit.MockitoJUnitRunner
 
-@RunWith(MockitoJUnitRunner::class)
 class CompositeTransformerTest {
 
     private val mockTransformer1 = mock<Transformer<Long, Boolean, Int>> {

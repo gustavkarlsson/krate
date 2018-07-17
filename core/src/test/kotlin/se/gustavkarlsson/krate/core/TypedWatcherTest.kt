@@ -4,10 +4,7 @@ import assertk.assert
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.junit.MockitoJUnitRunner
 
-@RunWith(MockitoJUnitRunner::class)
 class TypedWatcherTest {
 
     private var consumed = false

@@ -5,10 +5,7 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import io.reactivex.Observable
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.junit.MockitoJUnitRunner
 
-@RunWith(MockitoJUnitRunner::class)
 class TypedTransformerTest {
 
     private val impl = TypedTransformer<Boolean, Number, Long, Int>(Int::class) { getState ->
