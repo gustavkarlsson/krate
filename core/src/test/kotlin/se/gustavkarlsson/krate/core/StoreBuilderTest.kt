@@ -16,11 +16,11 @@ class StoreBuilderTest {
 
     private val mockState = mock<NotesState>()
     private val mockTransformer = mock<Transformer<NotesState, NotesCommand, NotesResult>>()
-    private val mockTypedTransformer = mock<Transformer<NotesState, GetNoteAsync, NotesResult>>()
+    private val mockTypedTransformer = mock<Transformer<NotesState, CreateNote, NotesResult>>()
     private val mockReducer = mock<Reducer<NotesState, NotesResult>>()
     private val mockTypedReducer = mock<Reducer<NotesState, NoteCreated>>()
     private val mockCommandWatcher = mock<Watcher<NotesCommand>>()
-    private val mockTypedCommandWatcher = mock<Watcher<GetNoteAsync>>()
+    private val mockTypedCommandWatcher = mock<Watcher<CreateNote>>()
     private val mockResultWatcher = mock<Watcher<NotesResult>>()
     private val mockTypedResultWatcher = mock<Watcher<NoteCreated>>()
     private val mockStateWatcher = mock<Watcher<NotesState>>()
