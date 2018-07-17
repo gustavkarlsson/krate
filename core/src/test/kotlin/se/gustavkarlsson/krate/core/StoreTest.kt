@@ -3,6 +3,8 @@ package se.gustavkarlsson.krate.core
 import Reducer
 import Transformer
 import Watcher
+import assertk.assert
+import assertk.assertions.isEqualTo
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
@@ -12,11 +14,15 @@ import io.reactivex.schedulers.TestScheduler
 import org.junit.Test
 
 class StoreTest {
+    private val initialState = NotesState()
+
     private val transformerNote2 = Note("transformer2 note")
 
     private val reducer1Note = Note("reducer1 note")
 
     private val reducer2Note = Note("reducer2 note")
+
+    private val newState = NotesState(listOf(reducer1Note, reducer2Note))
 
     private val mockTransformer1 = mock<Transformer<NotesState, NotesCommand, NotesResult>> {
         on(it.invoke(any(), any())).thenAnswer {
@@ -61,7 +67,7 @@ class StoreTest {
     private val testScheduler = TestScheduler()
 
     private val impl = Store(
-        NotesState(),
+        initialState,
         listOf(mockTransformer1, mockTransformer2),
         listOf(mockReducer1, mockReducer2),
         listOf(mockCommandWatcher1, mockCommandWatcher2),
@@ -71,13 +77,30 @@ class StoreTest {
     )
 
     @Test
+    fun `currentState before any command has initialState`() {
+        val result = impl.currentState
+
+        assert(result).isEqualTo(initialState)
+    }
+
+    @Test
+    fun `currentState after processing chain has latest state`() {
+        impl.start()
+        impl.issue(CreateNote(""))
+
+        val result = impl.currentState
+
+        assert(result).isEqualTo(newState)
+    }
+
+    @Test
     fun `subscribe before any command gets initial state`() {
         impl.start()
 
         val observer = impl.states.test()
         testScheduler.triggerActions()
 
-        observer.assertValue(NotesState())
+        observer.assertValue(initialState)
     }
 
     @Test
@@ -88,7 +111,7 @@ class StoreTest {
         val observer = impl.states.test()
         testScheduler.triggerActions()
 
-        observer.assertValue(NotesState())
+        observer.assertValue(initialState)
     }
 
     @Test
@@ -147,13 +170,11 @@ class StoreTest {
 
         impl.issue(CreateNote(""))
 
-        val expectedState1 = NotesState(listOf())
-        val expectedState2 = NotesState(listOf(reducer1Note, reducer2Note))
         inOrder(mockStateWatcher1, mockStateWatcher2) {
-            verify(mockStateWatcher1).invoke(expectedState1)
-            verify(mockStateWatcher2).invoke(expectedState1)
-            verify(mockStateWatcher1).invoke(expectedState2)
-            verify(mockStateWatcher2).invoke(expectedState2)
+            verify(mockStateWatcher1).invoke(initialState)
+            verify(mockStateWatcher2).invoke(initialState)
+            verify(mockStateWatcher1).invoke(newState)
+            verify(mockStateWatcher2).invoke(newState)
         }
     }
 
@@ -166,8 +187,8 @@ class StoreTest {
         impl.issue(CreateNote(""))
 
         inOrder(mockStateWatcher1) {
-            verify(mockStateWatcher1).invoke(NotesState(listOf()))
-            verify(mockStateWatcher1).invoke(NotesState(listOf(reducer1Note, reducer2Note)))
+            verify(mockStateWatcher1).invoke(initialState)
+            verify(mockStateWatcher1).invoke(newState)
         }
     }
 }
