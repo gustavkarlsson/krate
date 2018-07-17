@@ -115,6 +115,17 @@ class StoreTest {
     }
 
     @Test
+    fun `subscribe after processing chain gets latest state`() {
+        impl.start()
+        impl.issue(CreateNote(""))
+        testScheduler.triggerActions()
+
+        val observer = impl.states.test()
+
+        observer.assertValue(newState)
+    }
+
+    @Test
     fun `command watchers are called in order`() {
         impl.start()
         val note = CreateNote("")
