@@ -52,7 +52,6 @@ internal constructor(
         .reduce(initialState)
         .setCurrentState()
         .watch(stateWatchers)
-        .setObserver()
         .replay(1)
         .refCount()
 
@@ -89,14 +88,14 @@ internal constructor(
      * An observable stream of state updates produced by this store,
      * starting with the current state
      *
-     * State updates will be observed on the observe [Scheduler] if one was specified
-     * or a per-store unique background thread.
+     * State updates will be observed on the observe [Scheduler] if one was specified.
      *
      * *Note: All subscribers share a single upstream subscription,
      * so there is no need to use publishing operators such as [Observable.publish].*
      * @return An [Observable] of [State] updates
      */
     val states: Observable<State> = internalStates
+        .setObserver()
 
     internal fun subscribeInternal() {
         internalStates.subscribe()

@@ -124,9 +124,9 @@ class StoreTest {
     fun `subscribe after processing chain gets latest state`() {
         impl.subscribeInternal()
         impl.issue(CreateNote(""))
-        testScheduler.triggerActions()
 
         val observer = impl.states.test()
+        testScheduler.triggerActions()
 
         observer.assertValue(newState)
     }
