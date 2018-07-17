@@ -165,12 +165,9 @@ reduceByType<Result.AdjustCount> { state, result ->
 
 Now that we've built the store, we can start using it!
 ```kotlin
-// Start the store to enable processing
-store.start()
-
 // Subscribe to state updates and render the view
-store.states.subscribe {
-    counterTextView.text = it
+store.states.subscribe { state ->
+    render(state)
 }
 
 // Bind events to commands

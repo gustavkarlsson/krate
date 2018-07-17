@@ -9,4 +9,5 @@ fun <State : Any, Command : Any, Result : Any> buildStore(
     return StoreBuilder<State, Command, Result>()
         .apply(block)
         .build()
+        .apply(Store<*,*,*>::subscribeInternal)
 }

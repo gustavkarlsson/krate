@@ -11,6 +11,7 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import io.reactivex.Observable
 import io.reactivex.schedulers.TestScheduler
+import org.junit.Before
 import org.junit.Test
 
 class StoreTest {
@@ -76,6 +77,11 @@ class StoreTest {
         testScheduler
     )
 
+    @Before
+    fun setUp() {
+        impl.subscribeInternal()
+    }
+
     @Test
     fun `currentState before any command has initialState`() {
         val result = impl.currentState
@@ -85,7 +91,7 @@ class StoreTest {
 
     @Test
     fun `currentState after processing chain has latest state`() {
-        impl.start()
+        impl.subscribeInternal()
         impl.issue(CreateNote(""))
 
         val result = impl.currentState
@@ -95,7 +101,7 @@ class StoreTest {
 
     @Test
     fun `subscribe before any command gets initial state`() {
-        impl.start()
+        impl.subscribeInternal()
 
         val observer = impl.states.test()
         testScheduler.triggerActions()
@@ -105,7 +111,7 @@ class StoreTest {
 
     @Test
     fun `second subscribe before any command also gets initial state`() {
-        impl.start()
+        impl.subscribeInternal()
 
         impl.states.subscribe()
         val observer = impl.states.test()
@@ -116,7 +122,7 @@ class StoreTest {
 
     @Test
     fun `subscribe after processing chain gets latest state`() {
-        impl.start()
+        impl.subscribeInternal()
         impl.issue(CreateNote(""))
         testScheduler.triggerActions()
 
@@ -127,7 +133,7 @@ class StoreTest {
 
     @Test
     fun `command watchers are called in order`() {
-        impl.start()
+        impl.subscribeInternal()
         val note = CreateNote("")
 
         impl.issue(note)
@@ -140,7 +146,7 @@ class StoreTest {
 
     @Test
     fun `command watchers are called once per command even if multiple subscribers exist`() {
-        impl.start()
+        impl.subscribeInternal()
         val note = CreateNote("")
         impl.states.subscribe()
         impl.states.subscribe()
@@ -152,7 +158,7 @@ class StoreTest {
 
     @Test
     fun `transformers are called in order`() {
-        impl.start()
+        impl.subscribeInternal()
 
         inOrder(mockTransformer1, mockTransformer2) {
             verify(mockTransformer1).invoke(any(), any())
@@ -162,7 +168,7 @@ class StoreTest {
 
     @Test
     fun `result watchers are called in order`() {
-        impl.start()
+        impl.subscribeInternal()
 
         impl.issue(CreateNote(""))
 
@@ -174,7 +180,7 @@ class StoreTest {
 
     @Test
     fun `result watchers are called once per result even if multiple subscribers exist`() {
-        impl.start()
+        impl.subscribeInternal()
         impl.states.subscribe()
         impl.states.subscribe()
 
@@ -185,7 +191,7 @@ class StoreTest {
 
     @Test
     fun `reducers are called in order`() {
-        impl.start()
+        impl.subscribeInternal()
 
         impl.issue(CreateNote(""))
 
@@ -197,7 +203,7 @@ class StoreTest {
 
     @Test
     fun `state watchers are called in order`() {
-        impl.start()
+        impl.subscribeInternal()
 
         impl.issue(CreateNote(""))
 
@@ -211,7 +217,7 @@ class StoreTest {
 
     @Test
     fun `state watchers are called once per state change even if multiple subscribers exist`() {
-        impl.start()
+        impl.subscribeInternal()
         impl.states.subscribe()
         impl.states.subscribe()
 

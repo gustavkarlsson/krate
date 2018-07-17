@@ -6,7 +6,6 @@ import Watcher
 import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.Observable
 import io.reactivex.Scheduler
-import io.reactivex.disposables.Disposable
 
 /**
  * Manages application (sub)state by accepting commands,
@@ -27,8 +26,6 @@ internal constructor(
     internal val stateWatchers: List<Watcher<State>>,
     internal val observeScheduler: Scheduler?
 ) {
-    private var internalSubscription: Disposable? = null
-    private var connection: Disposable? = null
 
     /**
      * The current state of the store
@@ -41,19 +38,15 @@ internal constructor(
      * Issue a command to the store for processing
      *
      * @param command the command to issue
-     * @throws IllegalStateException if store has not been [start]ed
      */
     fun issue(command: Command) {
-        if (internalSubscription == null) {
-            throw IllegalStateException("Can't issue commands until started")
-        }
         commandWatchers.forEach { watch -> watch(command) }
         commands.accept(command)
     }
 
     private val commands = PublishRelay.create<Command>().toSerialized()
 
-    private val connectableStates = commands
+    private val internalStates = commands
         .transform()
         .watch(resultWatchers)
         .reduce(initialState)
@@ -61,6 +54,7 @@ internal constructor(
         .watch(stateWatchers)
         .setObserver()
         .replay(1)
+        .refCount()
 
     private fun Observable<Command>.transform(): Observable<Result> {
         return compose(CompositeTransformer(transformers, ::currentState))
@@ -98,42 +92,13 @@ internal constructor(
      * State updates will be observed on the observe [Scheduler] if one was specified
      * or a per-store unique background thread.
      *
-     * *Note: The store will not produce any state until [start]ed.*
-     *
      * *Note: All subscribers share a single upstream subscription,
      * so there is no need to use publishing operators such as [Observable.publish].*
      * @return An [Observable] of [State] updates
      */
-    val states: Observable<State> = connectableStates
+    val states: Observable<State> = internalStates
 
-    /**
-     * Starts processing of this store.
-     * When started, commands issued via [issue] will be accepted
-     * and any observer of [states] will start receiving state updates.
-     */
-    @Synchronized
-    fun start() {
-        if (isRunning) return
-        connection = connectableStates.connect()
-        internalSubscription = connectableStates.subscribe()
+    internal fun subscribeInternal() {
+        internalStates.subscribe()
     }
-
-    /**
-     * Stops processing of this store.
-     * When stopped, commands will no longer be accepted
-     * and [states] will stop producing state updates
-     */
-    @Synchronized
-    fun stop() {
-        if (!isRunning) return
-        internalSubscription?.dispose()
-        connection?.dispose()
-        internalSubscription = null
-        connection = null
-    }
-
-    /**
-     * Is this store running (has been [start]ed)?
-     */
-    val isRunning get() = internalSubscription != null
 }
