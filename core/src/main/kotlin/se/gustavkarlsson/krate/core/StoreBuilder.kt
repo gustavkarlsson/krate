@@ -88,12 +88,7 @@ internal constructor() {
      * @param watch the watcher function
      */
     inline fun <reified C : Command> watchCommandsByType(noinline watch: Watcher<C>) {
-        watchCommands { command ->
-            if (C::class.javaObjectType.isInstance(command)) {
-                @Suppress("UNCHECKED_CAST")
-                watch(command as C)
-            }
-        }
+        watchCommands(TypedWatcher(C::class, watch))
     }
 
     /**
@@ -115,12 +110,7 @@ internal constructor() {
      * @param watch the watcher function
      */
     inline fun <reified R : Result> watchResultsByType(noinline watch: Watcher<R>) {
-        watchResults { result ->
-            if (R::class.javaObjectType.isInstance(result)) {
-                @Suppress("UNCHECKED_CAST")
-                watch(result as R)
-            }
-        }
+        watchResults(TypedWatcher(R::class, watch))
     }
 
     /**

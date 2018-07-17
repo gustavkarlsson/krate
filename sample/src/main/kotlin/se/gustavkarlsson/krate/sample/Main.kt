@@ -3,8 +3,6 @@ package se.gustavkarlsson.krate.sample
 fun main(args: Array<String>) {
     println("Starting sample app")
 
-    store.start()
-
     store.states.subscribe {
         println(it)
         it.errors.firstOrNull()?.let {
