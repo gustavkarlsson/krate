@@ -47,13 +47,13 @@ internal constructor(
         if (internalSubscription == null) {
             throw IllegalStateException("Can't issue commands until started")
         }
+        commandWatchers.forEach { watch -> watch(command) }
         commands.accept(command)
     }
 
     private val commands = PublishRelay.create<Command>().toSerialized()
 
     private val connectableStates = commands
-        .watch(commandWatchers)
         .transform()
         .watch(resultWatchers)
         .reduce(initialState)
@@ -64,6 +64,14 @@ internal constructor(
 
     private fun Observable<Command>.transform(): Observable<Result> {
         return compose(CompositeTransformer(transformers, ::currentState))
+    }
+
+    private fun <T> Observable<T>.watch(watchers: List<Watcher<T>>): Observable<T> {
+        return doOnNext { value ->
+            watchers.forEach { watch ->
+                watch(value)
+            }
+        }
     }
 
     private fun Observable<Result>.reduce(initialState: State): Observable<State> {
@@ -81,14 +89,6 @@ internal constructor(
         return observeScheduler?.let {
             observeOn(it)
         } ?: this
-    }
-
-    private fun <T> Observable<T>.watch(watchers: List<Watcher<T>>): Observable<T> {
-        return doOnNext { value ->
-            watchers.forEach { watch ->
-                watch(value)
-            }
-        }
     }
 
     /**
