@@ -1,6 +1,8 @@
 package se.gustavkarlsson.krate.core
 
+import Reducer
 import Watcher
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
@@ -12,6 +14,8 @@ import io.reactivex.schedulers.TestScheduler
 import org.junit.Test
 
 class StoreTest {
+    private val reducer1State = Note("reducer1 state")
+    private val reducer2State = Note("reducer2 state")
 
     private val transformer1 = { commands: Observable<NotesCommand>, _: () -> NotesState ->
         commands
@@ -33,19 +37,17 @@ class StoreTest {
             .cast<NotesResult>()
     }
 
-    private val reducer1 = { state: NotesState, result: NotesResult ->
-        if (result is NoteCreated) {
-            NotesState(state.notes + result.note)
-        } else {
-            state
+    private val mockReducer1 = mock<Reducer<NotesState, NotesResult>> {
+        on(it.invoke(any(), any())).thenAnswer {
+            val state = it.arguments[0] as NotesState
+            NotesState(state.notes + reducer1State)
         }
     }
 
-    private val reducer2 = { state: NotesState, result: NotesResult ->
-        if (result is NoteError) {
-            NotesState(errors = state.errors + result.throwable.message!!)
-        } else {
-            state
+    private val mockReducer2 = mock<Reducer<NotesState, NotesResult>> {
+        on(it.invoke(any(), any())).thenAnswer {
+            val state = it.arguments[0] as NotesState
+            NotesState(state.notes + reducer2State)
         }
     }
 
@@ -66,7 +68,7 @@ class StoreTest {
     private val impl = Store(
         NotesState(),
         listOf(transformer1, transformer2),
-        listOf(reducer1, reducer2),
+        listOf(mockReducer1, mockReducer2),
         listOf(mockCommandWatcher1, mockCommandWatcher2),
         listOf(mockResultWatcher1, mockResultWatcher2),
         listOf(mockStateWatcher1, mockStateWatcher2),
@@ -149,27 +151,30 @@ class StoreTest {
     @Test
     fun `state watchers are called in order`() {
         impl.start()
-        val noteText = "testnote"
 
-        impl.issue(CreateNote(noteText))
+        impl.issue(CreateNote(""))
 
-        val expectedState = NotesState(listOf(Note(noteText)))
+        val expectedState1 = NotesState(listOf())
+        val expectedState2 = NotesState(listOf(reducer1State, reducer2State))
         inOrder(mockStateWatcher1, mockStateWatcher2) {
-            verify(mockStateWatcher1).invoke(expectedState)
-            verify(mockStateWatcher2).invoke(expectedState)
+            verify(mockStateWatcher1).invoke(expectedState1)
+            verify(mockStateWatcher2).invoke(expectedState1)
+            verify(mockStateWatcher1).invoke(expectedState2)
+            verify(mockStateWatcher2).invoke(expectedState2)
         }
     }
 
     @Test
     fun `state watchers are called once per state change even if multiple subscribers exist`() {
         impl.start()
-        val noteText = "testnote"
         impl.states.subscribe()
         impl.states.subscribe()
 
-        impl.issue(CreateNote(noteText))
+        impl.issue(CreateNote(""))
 
-        val expectedState = NotesState(listOf(Note(noteText)))
-        verify(mockStateWatcher1).invoke(expectedState)
+        inOrder(mockStateWatcher1) {
+            verify(mockStateWatcher1).invoke(NotesState(listOf()))
+            verify(mockStateWatcher1).invoke(NotesState(listOf(reducer1State, reducer2State)))
+        }
     }
 }
