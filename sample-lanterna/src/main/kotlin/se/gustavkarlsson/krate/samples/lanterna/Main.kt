@@ -21,7 +21,10 @@ fun main(args: Array<String>) {
 
     store.states
         .map { it.repos }
-        .subscribe { mainWindow.setRepos(it) }
+        .subscribe {
+            val newRepos = it.subList(mainWindow.repoCount, it.size)
+            mainWindow.addRepos(newRepos)
+        }
 
     store.states
         .map { it.errors }
@@ -39,7 +42,7 @@ fun main(args: Array<String>) {
 
     store.states
         .subscribe {
-            val repo = it.shownRepo
+            val repo = it.openRepo
             if (repo != null) {
                 if (gui.activeWindow !is RepoDetailsWindow) {
                     val window = RepoDetailsWindow(repo)
@@ -49,7 +52,7 @@ fun main(args: Array<String>) {
             }
         }
 
-    mainWindow.requestMoreListener = {
+    mainWindow.loadMoreListener = {
         store.issue(Command.LoadMoreRepos)
     }
 

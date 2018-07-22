@@ -15,10 +15,10 @@ import se.gustavkarlsson.krate.samples.lanterna.api.models.Repo
 import java.util.concurrent.atomic.AtomicBoolean
 
 class ReposWindow : BasicWindow(TITLE) {
-    private val repositoriesTable = SelectionListeningTable<String>("Name", "Owner", "Description").apply {
+    private val table = SelectionListeningTable<String>("Name", "Owner", "Description").apply {
         selectionListener = {
-            if (selectedRow >= tableModel.rowCount - 5) {
-                requestMoreListener?.invoke()
+            if (selectedRow >= tableModel.rowCount - 1) {
+                loadMoreListener?.invoke()
             }
         }
         setSelectAction {
@@ -28,7 +28,12 @@ class ReposWindow : BasicWindow(TITLE) {
 
     init {
         setHints(listOf(Window.Hint.EXPANDED))
-        component = Panel(LinearLayout(Direction.VERTICAL))
+        component = buildContent()
+        addWindowListener(ResizeListener { updateTableSize(it.rows) })
+    }
+
+    private fun buildContent(): Panel =
+        Panel(LinearLayout(Direction.VERTICAL))
             .addComponent(
                 EmptySpace()
             )
@@ -36,27 +41,15 @@ class ReposWindow : BasicWindow(TITLE) {
                 Label("Repositories")
             )
             .addComponent(
-                repositoriesTable,
+                table,
                 LinearLayout.createLayoutData(LinearLayout.Alignment.Fill)
             )
-        addWindowListener(object : WindowListener {
-            override fun onInput(basePane: Window, keyStroke: KeyStroke, deliverEvent: AtomicBoolean) = Unit
-
-            override fun onMoved(window: Window, oldPosition: TerminalPosition?, newPosition: TerminalPosition) = Unit
-
-            override fun onResized(window: Window, oldSize: TerminalSize?, newSize: TerminalSize) {
-                updateTableSize(newSize.rows)
-            }
-
-            override fun onUnhandledInput(basePane: Window, keyStroke: KeyStroke, hasBeenHandled: AtomicBoolean) = Unit
-        })
-    }
 
     private fun updateTableSize(windowHeight: Int) {
-        repositoriesTable.visibleRows = windowHeight - 3
+        table.visibleRows = windowHeight - 3
     }
 
-    var requestMoreListener: (() -> Unit)? = null
+    var loadMoreListener: (() -> Unit)? = null
 
     var repoClickedListener: ((Int) -> Unit)? = null
 
@@ -66,13 +59,28 @@ class ReposWindow : BasicWindow(TITLE) {
             title = if (value) "$TITLE (loading)" else TITLE
         }
 
-    fun setRepos(repos: List<Repo>) {
-        repos.drop(repositoriesTable.tableModel.rowCount).forEach {
-            repositoriesTable.tableModel.addRow(it.name, it.owner.login, it.description ?: "")
+    val repoCount: Int
+        get() = table.tableModel.rowCount
+
+    fun addRepos(repos: List<Repo>) {
+        repos.forEach {
+            table.tableModel.addRow(it.name, it.owner.login, it.description ?: "-")
         }
     }
 
     companion object {
         private const val TITLE = "Github Browser"
+    }
+
+    private class ResizeListener(private val onResize: (TerminalSize) -> Unit) : WindowListener {
+        override fun onInput(basePane: Window, keyStroke: KeyStroke, deliverEvent: AtomicBoolean) = Unit
+
+        override fun onMoved(window: Window, oldPosition: TerminalPosition?, newPosition: TerminalPosition) = Unit
+
+        override fun onResized(window: Window, oldSize: TerminalSize?, newSize: TerminalSize) {
+            onResize(newSize)
+        }
+
+        override fun onUnhandledInput(basePane: Window, keyStroke: KeyStroke, hasBeenHandled: AtomicBoolean) = Unit
     }
 }

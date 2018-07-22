@@ -64,11 +64,11 @@ val store = buildStore<State, Command, Result> {
     }
 
     reduceByType<Result.LoadedRepoDetails> { state, result ->
-        state.copy(shownRepo = result.repo)
+        state.copy(openRepo = result.repo)
     }
 
     reduceByType<Result.ClosedRepoDetails> { state, _ ->
-        state.copy(shownRepo = null)
+        state.copy(openRepo = null)
     }
 
     reduceByType<Result.GotError> { state, result ->

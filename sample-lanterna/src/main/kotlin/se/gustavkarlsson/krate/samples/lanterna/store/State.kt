@@ -8,5 +8,5 @@ data class State(
     val errors: List<String> = emptyList(),
     val isLoadingNewRepos: Boolean = false,
     val isLoadingRepoDetails: Boolean = false,
-    val shownRepo: RepoDetails? = null
+    val openRepo: RepoDetails? = null
 )

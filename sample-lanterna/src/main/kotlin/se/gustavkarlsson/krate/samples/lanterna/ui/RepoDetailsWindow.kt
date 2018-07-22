@@ -23,7 +23,7 @@ class RepoDetailsWindow(repo: RepoDetails) : BasicWindow(repo.name) {
                 Label("Description: ")
             )
             .addComponent(
-                Label(repo.description ?: "")
+                Label(repo.description ?: "-")
             )
             .addComponent(
                 Label("Stars: ")
@@ -35,7 +35,7 @@ class RepoDetailsWindow(repo: RepoDetails) : BasicWindow(repo.name) {
                 Label("License: ")
             )
             .addComponent(
-                Label(repo.license?.name ?: "Unknown")
+                Label(repo.license?.name ?: "-")
             )
             .addComponent(
                 EmptySpace(),
