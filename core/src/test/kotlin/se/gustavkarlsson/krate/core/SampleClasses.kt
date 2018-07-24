@@ -8,6 +8,7 @@ data class NotesState(
 
 sealed class NotesCommand
 data class CreateNote(val text: String) : NotesCommand()
+object CauseError : NotesCommand()
 
 sealed class NotesResult
 data class NoteCreated(val note: Note) : NotesResult()

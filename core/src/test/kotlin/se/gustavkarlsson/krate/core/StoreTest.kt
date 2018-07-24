@@ -10,6 +10,7 @@ import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import io.reactivex.Observable
+import io.reactivex.rxkotlin.ofType
 import io.reactivex.schedulers.TestScheduler
 import org.junit.Before
 import org.junit.Test
@@ -22,6 +23,8 @@ class StoreTest {
     private val reducer1Note = Note("reducer1 note")
 
     private val reducer2Note = Note("reducer2 note")
+
+    private val error = Exception("error")
 
     private val newState = NotesState(listOf(reducer1Note, reducer2Note))
 
@@ -36,6 +39,15 @@ class StoreTest {
         on(it.invoke(any(), any())).thenAnswer {
             val commands = it.arguments[0] as Observable<*>
             commands.map { transformer2Result }
+        }
+    }
+
+    private val mockTransformer3 = mock<Transformer<NotesState, NotesCommand, NotesResult>> {
+        on(it.invoke(any(), any())).thenAnswer {
+            val commands = it.arguments[0] as Observable<*>
+            commands
+                .ofType<CauseError>()
+                .flatMap { Observable.error<NotesResult>(error) }
         }
     }
 
@@ -65,15 +77,20 @@ class StoreTest {
 
     private val mockStateWatcher2 = mock<Watcher<NotesState>>()
 
+    private val mockErrorWatcher1 = mock<Watcher<Throwable>>()
+
+    private val mockErrorWatcher2 = mock<Watcher<Throwable>>()
+
     private val testScheduler = TestScheduler()
 
     private val impl = Store(
         initialState,
-        listOf(mockTransformer1, mockTransformer2),
+        listOf(mockTransformer1, mockTransformer2, mockTransformer3),
         listOf(mockReducer1, mockReducer2),
         listOf(mockCommandWatcher1, mockCommandWatcher2),
         listOf(mockResultWatcher1, mockResultWatcher2),
         listOf(mockStateWatcher1, mockStateWatcher2),
+        listOf(mockErrorWatcher1, mockErrorWatcher2),
         testScheduler
     )
 
@@ -227,5 +244,28 @@ class StoreTest {
             verify(mockStateWatcher1).invoke(initialState)
             verify(mockStateWatcher1).invoke(newState)
         }
+    }
+
+    @Test
+    fun `error watchers are called in order`() {
+        impl.subscribeInternal()
+
+        impl.issue(CauseError)
+
+        inOrder(mockErrorWatcher1, mockErrorWatcher2) {
+            verify(mockErrorWatcher1).invoke(error)
+            verify(mockErrorWatcher2).invoke(error)
+        }
+    }
+
+    @Test
+    fun `error watchers are called once per error even if multiple subscribers exist`() {
+        impl.subscribeInternal()
+        impl.states.subscribe()
+        impl.states.subscribe()
+
+        impl.issue(CauseError)
+
+        verify(mockErrorWatcher1).invoke(error)
     }
 }

@@ -24,6 +24,7 @@ internal constructor(
     internal val commandWatchers: List<Watcher<Command>>,
     internal val resultWatchers: List<Watcher<Result>>,
     internal val stateWatchers: List<Watcher<State>>,
+    internal val errorWatchers: List<Watcher<Throwable>>,
     internal val observeScheduler: Scheduler?
 ) {
 
@@ -49,9 +50,10 @@ internal constructor(
     private val internalStates = commands
         .transform()
         .watch(resultWatchers)
-        .reduce(initialState)
+        .reduce()
         .setCurrentState()
         .watch(stateWatchers)
+        .watchErrors()
         .replay(1)
         .autoConnect()
 
@@ -67,9 +69,17 @@ internal constructor(
         }
     }
 
-    private fun Observable<Result>.reduce(initialState: State): Observable<State> {
+    private fun <T> Observable<T>.watchErrors(): Observable<T> {
+        return doOnError { throwable ->
+            errorWatchers.forEach { watch ->
+                watch(throwable)
+            }
+        }
+    }
+
+    private fun Observable<Result>.reduce(): Observable<State> {
         return serialize()
-            .scan(initialState, CompositeReducer(reducers))
+            .scanWith(::currentState, CompositeReducer(reducers))
     }
 
     private fun Observable<State>.setCurrentState(): Observable<State> {

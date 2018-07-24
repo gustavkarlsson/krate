@@ -24,6 +24,7 @@ class StoreBuilderTest {
     private val mockResultWatcher = mock<Watcher<NotesResult>>()
     private val mockTypedResultWatcher = mock<Watcher<NoteCreated>>()
     private val mockStateWatcher = mock<Watcher<NotesState>>()
+    private val mockErrorWatcher = mock<Watcher<Throwable>>()
     private val mockObserveScheduler = mock<Scheduler>()
 
     @Test
@@ -40,6 +41,7 @@ class StoreBuilderTest {
                 watchResults(mockResultWatcher)
                 watchResultsByType(mockTypedResultWatcher)
                 watchStates(mockStateWatcher)
+                watchErrors(mockErrorWatcher)
                 observeOn(mockObserveScheduler)
             }
             .build()
@@ -56,6 +58,7 @@ class StoreBuilderTest {
                 assert(resultWatchers).hasSize(2)
                 assert(resultWatchers[0]).isEqualTo(mockResultWatcher)
                 assert(stateWatchers).containsExactly(mockStateWatcher)
+                assert(errorWatchers).containsExactly(mockErrorWatcher)
                 assert(observeScheduler).isEqualTo(mockObserveScheduler)
             }
         }

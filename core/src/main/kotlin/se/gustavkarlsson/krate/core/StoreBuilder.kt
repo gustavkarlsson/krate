@@ -13,6 +13,7 @@ internal constructor() {
     private val commandWatchers = mutableListOf<Watcher<Command>>()
     private val resultWatchers = mutableListOf<Watcher<Result>>()
     private val stateWatchers = mutableListOf<Watcher<State>>()
+    private val errorWatchers = mutableListOf<Watcher<Throwable>>()
     private var observeScheduler: Scheduler? = null
 
     /**
@@ -125,6 +126,17 @@ internal constructor() {
     }
 
     /**
+     * Adds an error watcher to the store.
+     *
+     * An error watcher runs for each error caused
+     *
+     * @param watch the watcher function
+     */
+    fun watchErrors(watch: Watcher<Throwable>) {
+        errorWatchers += watch
+    }
+
+    /**
      * Sets a scheduler that will be used to observe state changes.
      *
      * @param scheduler the scheduler, or null if no specific scheduler should be used
@@ -144,6 +156,7 @@ internal constructor() {
             commandWatchers,
             resultWatchers,
             stateWatchers,
+            errorWatchers,
             observeScheduler
         )
     }
