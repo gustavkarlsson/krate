@@ -24,7 +24,9 @@ internal constructor(
     internal val commandWatchers: List<Watcher<Command>>,
     internal val resultWatchers: List<Watcher<Result>>,
     internal val stateWatchers: List<Watcher<State>>,
-    internal val observeScheduler: Scheduler?
+    internal val errorWatchers: List<Watcher<Throwable>>,
+    internal val observeScheduler: Scheduler?,
+    internal val retryOnError: Boolean
 ) {
 
     /**
@@ -39,37 +41,45 @@ internal constructor(
      *
      * @param command the command to issue
      */
-    fun issue(command: Command) {
-        commandWatchers.forEach { watch -> watch(command) }
-        commands.accept(command)
-    }
+    fun issue(command: Command) = commands.accept(command)
 
     private val commands = PublishRelay.create<Command>().toSerialized()
 
     private val internalStates = commands
-        .transform()
-        .watch(resultWatchers)
-        .reduce(initialState)
+        .watchCommands()
+        .transformToResults()
+        .watchResults()
+        .reduceToStates()
         .setCurrentState()
-        .watch(stateWatchers)
+        .watchStates()
+        .watchErrors()
+        .retryIfEnabled()
         .replay(1)
         .autoConnect()
 
-    private fun Observable<Command>.transform(): Observable<Result> {
-        return compose(CompositeTransformer(transformers, ::currentState))
-    }
-
-    private fun <T> Observable<T>.watch(watchers: List<Watcher<T>>): Observable<T> {
+    private fun Observable<Command>.watchCommands(): Observable<Command> {
         return doOnNext { value ->
-            watchers.forEach { watch ->
+            commandWatchers.forEach { watch ->
                 watch(value)
             }
         }
     }
 
-    private fun Observable<Result>.reduce(initialState: State): Observable<State> {
+    private fun Observable<Command>.transformToResults(): Observable<Result> {
+        return compose(CompositeTransformer(transformers, ::currentState))
+    }
+
+    private fun Observable<Result>.watchResults(): Observable<Result> {
+        return doOnNext { value ->
+            resultWatchers.forEach { watch ->
+                watch(value)
+            }
+        }
+    }
+
+    private fun Observable<Result>.reduceToStates(): Observable<State> {
         return serialize()
-            .scan(initialState, CompositeReducer(reducers))
+            .scanWith(::currentState, CompositeReducer(reducers))
     }
 
     private fun Observable<State>.setCurrentState(): Observable<State> {
@@ -78,10 +88,24 @@ internal constructor(
         }
     }
 
-    private fun Observable<State>.setObserver(): Observable<State> {
-        return observeScheduler?.let {
-            observeOn(it)
-        } ?: this
+    private fun Observable<State>.watchStates(): Observable<State> {
+        return doOnNext { value ->
+            stateWatchers.forEach { watch ->
+                watch(value)
+            }
+        }
+    }
+
+    private fun <T> Observable<T>.watchErrors(): Observable<T> {
+        return doOnError { throwable ->
+            errorWatchers.forEach { watch ->
+                watch(throwable)
+            }
+        }
+    }
+
+    private fun <T> Observable<T>.retryIfEnabled(): Observable<T> {
+        return retry { _ -> retryOnError }
     }
 
     /**
@@ -96,6 +120,12 @@ internal constructor(
      */
     val states: Observable<State> = internalStates
         .setObserver()
+
+    private fun Observable<State>.setObserver(): Observable<State> {
+        return observeScheduler?.let {
+            observeOn(it)
+        } ?: this
+    }
 
     internal fun subscribeInternal() {
         internalStates.subscribe()

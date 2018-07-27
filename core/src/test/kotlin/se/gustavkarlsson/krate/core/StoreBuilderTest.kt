@@ -8,6 +8,7 @@ import assertk.assertAll
 import assertk.assertions.containsExactly
 import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
+import assertk.assertions.isTrue
 import com.nhaarman.mockitokotlin2.mock
 import io.reactivex.Scheduler
 import org.junit.Test
@@ -24,6 +25,7 @@ class StoreBuilderTest {
     private val mockResultWatcher = mock<Watcher<NotesResult>>()
     private val mockTypedResultWatcher = mock<Watcher<NoteCreated>>()
     private val mockStateWatcher = mock<Watcher<NotesState>>()
+    private val mockErrorWatcher = mock<Watcher<Throwable>>()
     private val mockObserveScheduler = mock<Scheduler>()
 
     @Test
@@ -40,7 +42,9 @@ class StoreBuilderTest {
                 watchResults(mockResultWatcher)
                 watchResultsByType(mockTypedResultWatcher)
                 watchStates(mockStateWatcher)
+                watchErrors(mockErrorWatcher)
                 observeOn(mockObserveScheduler)
+                retryOnError(true)
             }
             .build()
 
@@ -56,7 +60,9 @@ class StoreBuilderTest {
                 assert(resultWatchers).hasSize(2)
                 assert(resultWatchers[0]).isEqualTo(mockResultWatcher)
                 assert(stateWatchers).containsExactly(mockStateWatcher)
+                assert(errorWatchers).containsExactly(mockErrorWatcher)
                 assert(observeScheduler).isEqualTo(mockObserveScheduler)
+                assert(retryOnError).isTrue()
             }
         }
     }

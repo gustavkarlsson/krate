@@ -13,7 +13,9 @@ internal constructor() {
     private val commandWatchers = mutableListOf<Watcher<Command>>()
     private val resultWatchers = mutableListOf<Watcher<Result>>()
     private val stateWatchers = mutableListOf<Watcher<State>>()
+    private val errorWatchers = mutableListOf<Watcher<Throwable>>()
     private var observeScheduler: Scheduler? = null
+    private var retryOnError: Boolean = false
 
     /**
      * Sets the initial state of the store.
@@ -125,12 +127,36 @@ internal constructor() {
     }
 
     /**
+     * Adds an error watcher to the store.
+     *
+     * An error watcher runs for each error caused
+     *
+     * @param watch the watcher function
+     */
+    fun watchErrors(watch: Watcher<Throwable>) {
+        errorWatchers += watch
+    }
+
+    /**
      * Sets a scheduler that will be used to observe state changes.
      *
      * @param scheduler the scheduler, or null if no specific scheduler should be used
      */
     fun observeOn(scheduler: Scheduler?) {
         observeScheduler = scheduler
+    }
+
+    /**
+     * Instructs the store whether to retry whenever an error occurs instead of stopping the chain.
+     *
+     * This can be useful in production environments but should be disabled during development.
+     *
+     * Default is *false*
+     *
+     * @param retryOnError whether to retry if an error occurs
+     */
+    fun retryOnError(retryOnError: Boolean) {
+        this.retryOnError = retryOnError
     }
 
     internal fun build(): Store<State, Command, Result> {
@@ -144,7 +170,9 @@ internal constructor() {
             commandWatchers,
             resultWatchers,
             stateWatchers,
-            observeScheduler
+            errorWatchers,
+            observeScheduler,
+            retryOnError
         )
     }
 }
