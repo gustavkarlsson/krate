@@ -15,6 +15,7 @@ internal constructor() {
     private val stateWatchers = mutableListOf<Watcher<State>>()
     private val errorWatchers = mutableListOf<Watcher<Throwable>>()
     private var observeScheduler: Scheduler? = null
+    private var retryOnError: Boolean = false
 
     /**
      * Sets the initial state of the store.
@@ -145,6 +146,19 @@ internal constructor() {
         observeScheduler = scheduler
     }
 
+    /**
+     * Instructs the store whether to retry whenever an error occurs instead of stopping the chain.
+     *
+     * This can be useful in production environments but should be disabled during development.
+     *
+     * Default is *false*
+     *
+     * @param retryOnError whether to retry if an error occurs
+     */
+    fun retryOnError(retryOnError: Boolean) {
+        this.retryOnError = retryOnError
+    }
+
     internal fun build(): Store<State, Command, Result> {
         val initialState = checkNotNull(initialState) { "No initial state set" }
         check(!transformers.isEmpty()) { "No transformers defined" }
@@ -157,7 +171,8 @@ internal constructor() {
             resultWatchers,
             stateWatchers,
             errorWatchers,
-            observeScheduler
+            observeScheduler,
+            retryOnError
         )
     }
 }

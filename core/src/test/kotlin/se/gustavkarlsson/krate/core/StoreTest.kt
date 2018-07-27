@@ -9,6 +9,7 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
 import io.reactivex.schedulers.TestScheduler
@@ -16,29 +17,30 @@ import org.junit.Before
 import org.junit.Test
 
 class StoreTest {
+    private val text = "content"
+
     private val initialState = NotesState()
 
-    private val transformer2Result = NoteCreated(Note("transformer2 note"))
-
-    private val reducer1Note = Note("reducer1 note")
-
-    private val reducer2Note = Note("reducer2 note")
+    private val transformer2Result = NoteCreated(Note(text))
 
     private val error = Exception("error")
 
-    private val newState = NotesState(listOf(reducer1Note, reducer2Note))
+    private val newState = NotesState(listOf(Note(text), Note(text)))
 
     private val mockTransformer1 = mock<Transformer<NotesState, NotesCommand, NotesResult>> {
         on(it.invoke(any(), any())).thenAnswer {
             val commands = it.arguments[0] as Observable<*>
-            commands.flatMap { Observable.empty<NotesResult>() }
+            commands
+                .flatMap { Observable.empty<NotesResult>() }
         }
     }
 
     private val mockTransformer2 = mock<Transformer<NotesState, NotesCommand, NotesResult>> {
         on(it.invoke(any(), any())).thenAnswer {
             val commands = it.arguments[0] as Observable<*>
-            commands.map { transformer2Result }
+            commands
+                .ofType<CreateNote>()
+                .map { transformer2Result }
         }
     }
 
@@ -54,14 +56,16 @@ class StoreTest {
     private val mockReducer1 = mock<Reducer<NotesState, NotesResult>> {
         on(it.invoke(any(), any())).thenAnswer {
             val state = it.arguments[0] as NotesState
-            NotesState(state.notes + reducer1Note)
+            val result = it.arguments[1] as NoteCreated
+            NotesState(state.notes + result.note)
         }
     }
 
     private val mockReducer2 = mock<Reducer<NotesState, NotesResult>> {
         on(it.invoke(any(), any())).thenAnswer {
             val state = it.arguments[0] as NotesState
-            NotesState(state.notes + reducer2Note)
+            val result = it.arguments[1] as NoteCreated
+            NotesState(state.notes + result.note)
         }
     }
 
@@ -91,7 +95,20 @@ class StoreTest {
         listOf(mockResultWatcher1, mockResultWatcher2),
         listOf(mockStateWatcher1, mockStateWatcher2),
         listOf(mockErrorWatcher1, mockErrorWatcher2),
-        testScheduler
+        testScheduler,
+        false
+    )
+
+    private val implFaultTolerant = Store(
+        initialState,
+        listOf(mockTransformer1, mockTransformer2, mockTransformer3),
+        listOf(mockReducer1, mockReducer2),
+        listOf(mockCommandWatcher1, mockCommandWatcher2),
+        listOf(mockResultWatcher1, mockResultWatcher2),
+        listOf(mockStateWatcher1, mockStateWatcher2),
+        listOf(mockErrorWatcher1, mockErrorWatcher2),
+        testScheduler,
+        true
     )
 
     @Before
@@ -109,7 +126,7 @@ class StoreTest {
     @Test
     fun `currentState after processing chain has latest state`() {
         impl.subscribeInternal()
-        impl.issue(CreateNote(""))
+        impl.issue(CreateNote(text))
 
         val result = impl.currentState
 
@@ -140,7 +157,7 @@ class StoreTest {
     @Test
     fun `subscribe after processing chain gets latest state`() {
         impl.subscribeInternal()
-        impl.issue(CreateNote(""))
+        impl.issue(CreateNote(text))
 
         val observer = impl.states.test()
         testScheduler.triggerActions()
@@ -151,7 +168,7 @@ class StoreTest {
     @Test
     fun `command watchers are called in order`() {
         impl.subscribeInternal()
-        val note = CreateNote("")
+        val note = CreateNote(text)
 
         impl.issue(note)
 
@@ -164,7 +181,7 @@ class StoreTest {
     @Test
     fun `command watchers are called once per command even if multiple subscribers exist`() {
         impl.subscribeInternal()
-        val note = CreateNote("")
+        val note = CreateNote(text)
         impl.states.subscribe()
         impl.states.subscribe()
 
@@ -187,7 +204,7 @@ class StoreTest {
     fun `result watchers are called in order`() {
         impl.subscribeInternal()
 
-        impl.issue(CreateNote(""))
+        impl.issue(CreateNote(text))
 
         inOrder(mockResultWatcher1, mockResultWatcher2) {
             verify(mockResultWatcher1).invoke(transformer2Result)
@@ -201,7 +218,7 @@ class StoreTest {
         impl.states.subscribe()
         impl.states.subscribe()
 
-        impl.issue(CreateNote(""))
+        impl.issue(CreateNote(text))
 
         verify(mockResultWatcher1).invoke(transformer2Result)
     }
@@ -209,12 +226,13 @@ class StoreTest {
     @Test
     fun `reducers are called in order`() {
         impl.subscribeInternal()
+        val text = text
 
-        impl.issue(CreateNote(""))
+        impl.issue(CreateNote(text))
 
         inOrder(mockReducer1, mockReducer2) {
             verify(mockReducer1).invoke(initialState, transformer2Result)
-            verify(mockReducer2).invoke(NotesState(initialState.notes + reducer1Note), transformer2Result)
+            verify(mockReducer2).invoke(NotesState(initialState.notes + Note(text)), transformer2Result)
         }
     }
 
@@ -222,7 +240,7 @@ class StoreTest {
     fun `state watchers are called in order`() {
         impl.subscribeInternal()
 
-        impl.issue(CreateNote(""))
+        impl.issue(CreateNote(text))
 
         inOrder(mockStateWatcher1, mockStateWatcher2) {
             verify(mockStateWatcher1).invoke(initialState)
@@ -238,7 +256,7 @@ class StoreTest {
         impl.states.subscribe()
         impl.states.subscribe()
 
-        impl.issue(CreateNote(""))
+        impl.issue(CreateNote(text))
 
         inOrder(mockStateWatcher1) {
             verify(mockStateWatcher1).invoke(initialState)
@@ -267,5 +285,28 @@ class StoreTest {
         impl.issue(CauseError)
 
         verify(mockErrorWatcher1).invoke(error)
+    }
+
+    @Test
+    fun `error observed if not fault tolerant`() {
+        impl.subscribeInternal()
+        val observer = impl.states.test()
+
+        impl.issue(CauseError)
+        testScheduler.triggerActions()
+
+        observer.assertError { true }
+    }
+
+    @Test
+    fun `chain continues if fault tolerant`() {
+        implFaultTolerant.subscribeInternal()
+        val observer = implFaultTolerant.states.distinctUntilChanged().test()
+
+        implFaultTolerant.issue(CauseError)
+        implFaultTolerant.issue(CreateNote(text))
+        testScheduler.triggerActions()
+
+        observer.assertValues(initialState, newState)
     }
 }
