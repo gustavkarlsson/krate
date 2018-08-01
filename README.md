@@ -25,8 +25,10 @@ but also [Flux](https://facebook.github.io/flux/) and [Redux](https://redux.js.o
 - **Great with Android:** Alleviates many of the annoying aspects of Android development
 
 
-## Documentation
-Check out the [wiki](https://github.com/gustavkarlsson/krate/wiki) for documentation.
+## Learn more
+Check out the [wiki](https://github.com/gustavkarlsson/krate/wiki) for documentation and a simple examples.
+
+You can also check out one of the provided sample projects.
 
 
 ## Download
