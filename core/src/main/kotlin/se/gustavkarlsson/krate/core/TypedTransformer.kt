@@ -13,6 +13,6 @@ class TypedTransformer<State : Any, Command : Any, Result : Any, C : Command>(
 ) : (Observable<Command>, () -> State) -> Observable<Result> {
 
     override fun invoke(commands: Observable<Command>, getState: () -> State): Observable<Result> {
-        return commands.ofType(type.javaObjectType).transform(getState)
+        return transform(commands.ofType(type.javaObjectType), getState)
     }
 }

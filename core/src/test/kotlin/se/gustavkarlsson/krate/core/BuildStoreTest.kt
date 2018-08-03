@@ -10,7 +10,7 @@ class BuildStoreTest {
     fun `applies block when run`() {
         val store = buildStore<Int, Unit, Unit> {
             setInitialState(5)
-            transform { this }
+            transform { commands, _ -> commands }
             reduce { state, _ -> state }
         }
 

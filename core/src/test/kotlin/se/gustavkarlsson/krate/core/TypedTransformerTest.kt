@@ -8,8 +8,8 @@ import org.junit.Test
 
 class TypedTransformerTest {
 
-    private val impl = TypedTransformer<Boolean, Number, Long, Int>(Int::class) { getState ->
-        map {
+    private val impl = TypedTransformer<Boolean, Number, Long, Int>(Int::class) { commands, getState ->
+        commands.map {
             val invert = getState()
             if (invert) {
                 -it.toLong()

@@ -20,7 +20,7 @@ class CompositeTransformer<State, Command, Result>(
     ): List<Observable<Result>> {
         return transformers
             .map { transform ->
-                this.transform(getState)
+                transform(this, getState)
             }
     }
 }

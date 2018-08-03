@@ -8,8 +8,8 @@ val store = buildStore<State, Command, Result> {
 
     setInitialState(State())
 
-    transformByType<Command.LoadMoreRepos> { getState ->
-        flatMap {
+    transformByType<Command.LoadMoreRepos> { commands, getState ->
+        commands.flatMap {
             val state = getState()
             if (state.isLoadingNewRepos) {
                 Observable.empty<Result>()
@@ -28,8 +28,8 @@ val store = buildStore<State, Command, Result> {
         }
     }
 
-    transformByType<Command.LoadRepoDetails> { getState ->
-        switchMap {
+    transformByType<Command.LoadRepoDetails> { commands, getState ->
+        commands.switchMap {
             val repo = getState().repos[it.index]
             github.getRepo(repo.owner.login, repo.name)
                 .flatMapObservable {
@@ -43,12 +43,12 @@ val store = buildStore<State, Command, Result> {
         }
     }
 
-    transformByType<Command.CloseRepoDetails> {
-        map { Result.ClosedRepoDetails }
+    transformByType<Command.CloseRepoDetails> { commands, _ ->
+        commands.map { Result.ClosedRepoDetails }
     }
 
-    transformByType<Command.AcknowledgeError> {
-        map { Result.RemovedError(it.error) }
+    transformByType<Command.AcknowledgeError> { commands, _ ->
+        commands.map { Result.RemovedError(it.error) }
     }
 
     reduceByType<Result.LoadingMoreRepos> { state, result ->
