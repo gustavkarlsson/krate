@@ -16,13 +16,12 @@ but also [Flux](https://facebook.github.io/flux/) and [Redux](https://redux.js.o
 ## Why Krate?
 
 - **Predictable:** Full control of application state changes, even during async operations
-- **Asynchronous:** Heavily utilizes RxJava to simplify asynchronous programming
+- **Asynchronous:** Built with RxJava to simplify asynchronous programming
 - **Unidirectional:** Data flows in one direction, making it easier to reason about
-- **Testable:** Easily write unit tests to verify use cases
 - **Separation of concerns:** Clear distinction between *what* and *how*
-- **Small API:** The API contains only a single public class and a few functions
+- **DSL:** The initial setup is done using a fully documented developer-friendly DSL
 - **Kotlin powered:** Utilizes advanced Kotlin features to provide a beautiful API
-- **Great with Android:** Alleviates many of the annoying aspects of Android development
+- **Great with Android:** Alleviates many annoying aspects of Android development
 
 
 ## Learn more

@@ -1,4 +1,4 @@
-package se.gustavkarlsson.krate.core
+package se.gustavkarlsson.krate.core.dsl
 
 import assertk.assert
 import assertk.assertions.isEqualTo
@@ -9,9 +9,9 @@ class BuildStoreTest {
     @Test
     fun `applies block when run`() {
         val store = buildStore<Int, Unit, Unit> {
-            setInitialState(5)
-            transform { this }
-            reduce { state, _ -> state }
+            states { initial = 5 }
+            commands { transformAll { it } }
+            results { reduceAll { state, _ -> state } }
         }
 
         assert(store.currentState).isEqualTo(5)

@@ -1,6 +1,6 @@
 package se.gustavkarlsson.krate.core
 
-import Transformer
+import StatefulTransformer
 import assertk.assert
 import assertk.assertions.isEqualTo
 import com.nhaarman.mockitokotlin2.any
@@ -11,13 +11,13 @@ import org.junit.Test
 
 class CompositeTransformerTest {
 
-    private val mockTransformer1 = mock<Transformer<Long, Boolean, Int>> {
+    private val mockTransformer1 = mock<StatefulTransformer<Long, Boolean, Int>> {
         on(it.invoke(any(), any())).thenAnswer {
             (it.arguments[0] as Observable<*>)
                 .map { 1 }
         }
     }
-    private val mockTransformer2 = mock<Transformer<Long, Boolean, Int>> {
+    private val mockTransformer2 = mock<StatefulTransformer<Long, Boolean, Int>> {
         on(it.invoke(any(), any())).thenAnswer {
             (it.arguments[0] as Observable<*>)
                 .flatMap { Observable.just(2, 3) }

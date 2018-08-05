@@ -1,7 +1,7 @@
-package se.gustavkarlsson.krate.core
+package se.gustavkarlsson.krate.core.dsl
 
 import Reducer
-import Transformer
+import StatefulTransformer
 import Watcher
 import assertk.assert
 import assertk.assertAll
@@ -12,12 +12,17 @@ import assertk.assertions.isTrue
 import com.nhaarman.mockitokotlin2.mock
 import io.reactivex.Scheduler
 import org.junit.Test
+import se.gustavkarlsson.krate.core.CreateNote
+import se.gustavkarlsson.krate.core.NoteCreated
+import se.gustavkarlsson.krate.core.NotesCommand
+import se.gustavkarlsson.krate.core.NotesResult
+import se.gustavkarlsson.krate.core.NotesState
 
 class StoreBuilderTest {
 
     private val mockState = mock<NotesState>()
-    private val mockTransformer = mock<Transformer<NotesState, NotesCommand, NotesResult>>()
-    private val mockTypedTransformer = mock<Transformer<NotesState, CreateNote, NotesResult>>()
+    private val mockTransformer = mock<StatefulTransformer<NotesState, NotesCommand, NotesResult>>()
+    private val mockTypedTransformer = mock<StatefulTransformer<NotesState, CreateNote, NotesResult>>()
     private val mockReducer = mock<Reducer<NotesState, NotesResult>>()
     private val mockTypedReducer = mock<Reducer<NotesState, NoteCreated>>()
     private val mockCommandWatcher = mock<Watcher<NotesCommand>>()
@@ -32,19 +37,27 @@ class StoreBuilderTest {
     fun `build full includes all added objects`() {
         val store = StoreBuilder<NotesState, NotesCommand, NotesResult>()
             .apply {
-                setInitialState(mockState)
-                transform(mockTransformer)
-                transformByType(mockTypedTransformer)
-                reduce(mockReducer)
-                reduceByType(mockTypedReducer)
-                watchCommands(mockCommandWatcher)
-                watchCommandsByType(mockTypedCommandWatcher)
-                watchResults(mockResultWatcher)
-                watchResultsByType(mockTypedResultWatcher)
-                watchStates(mockStateWatcher)
-                watchErrors(mockErrorWatcher)
-                observeOn(mockObserveScheduler)
-                retryOnError(true)
+                states {
+                    initial = mockState
+                    watch(mockStateWatcher)
+                    observeScheduler = mockObserveScheduler
+                }
+                commands {
+                    transformAllWithState(mockTransformer)
+                    transformWithState(mockTypedTransformer)
+                    watchAll(mockCommandWatcher)
+                    watch(mockTypedCommandWatcher)
+                }
+                results {
+                    reduceAll(mockReducer)
+                    reduce(mockTypedReducer)
+                    watchAll(mockResultWatcher)
+                    watch(mockTypedResultWatcher)
+                }
+                errors {
+                    retry = true
+                    watch(mockErrorWatcher)
+                }
             }
             .build()
 
@@ -71,9 +84,15 @@ class StoreBuilderTest {
     fun `build minimal succeeds`() {
         val builder = StoreBuilder<NotesState, NotesCommand, NotesResult>()
             .apply {
-                setInitialState(mockState)
-                transform(mockTransformer)
-                reduce(mockReducer)
+                states {
+                    initial = mockState
+                }
+                commands {
+                    transformAllWithState(mockTransformer)
+                }
+                results {
+                    reduceAll(mockReducer)
+                }
             }
 
         builder.build()
@@ -83,8 +102,12 @@ class StoreBuilderTest {
     fun `build without initial state throws exception`() {
         val builder = StoreBuilder<NotesState, NotesCommand, NotesResult>()
             .apply {
-                transform(mockTransformer)
-                reduce(mockReducer)
+                commands {
+                    transformAllWithState(mockTransformer)
+                }
+                results {
+                    reduceAll(mockReducer)
+                }
             }
 
         builder.build()
@@ -94,8 +117,12 @@ class StoreBuilderTest {
     fun `build without transformer throws exception`() {
         val builder = StoreBuilder<NotesState, NotesCommand, NotesResult>()
             .apply {
-                setInitialState(mockState)
-                reduce(mockReducer)
+                states {
+                    initial = mockState
+                }
+                results {
+                    reduceAll(mockReducer)
+                }
             }
 
         builder.build()
@@ -105,8 +132,12 @@ class StoreBuilderTest {
     fun `build without reducer throws exception`() {
         val builder = StoreBuilder<NotesState, NotesCommand, NotesResult>()
             .apply {
-                setInitialState(mockState)
-                transform(mockTransformer)
+                states {
+                    initial = mockState
+                }
+                commands {
+                    transformAllWithState(mockTransformer)
+                }
             }
 
         builder.build()
