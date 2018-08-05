@@ -25,7 +25,7 @@ but also [Flux](https://facebook.github.io/flux/) and [Redux](https://redux.js.o
 
 
 ## Learn more
-Check out the [wiki](https://github.com/gustavkarlsson/krate/wiki) for documentation and a simple examples.
+Check out the [wiki](https://github.com/gustavkarlsson/krate/wiki) for documentation and simple examples.
 
 You can also check out one of the provided sample projects.
 
