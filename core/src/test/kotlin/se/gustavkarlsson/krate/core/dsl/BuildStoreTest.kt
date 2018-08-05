@@ -1,9 +1,8 @@
-package se.gustavkarlsson.krate.core
+package se.gustavkarlsson.krate.core.dsl
 
 import assertk.assert
 import assertk.assertions.isEqualTo
 import org.junit.Test
-import se.gustavkarlsson.krate.core.dsl.buildStore
 
 class BuildStoreTest {
 

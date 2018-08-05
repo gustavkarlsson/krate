@@ -18,6 +18,11 @@ internal constructor() {
     private var observeScheduler: Scheduler? = null
     private var retryOnError: Boolean = false
 
+    /**
+     * Configure commands
+     *
+     * @param block the code used to configure
+     */
     fun commands(block: Commands<State, Command, Result>.() -> Unit) {
         Commands<State, Command, Result>()
             .also(block)
@@ -27,6 +32,11 @@ internal constructor() {
             }
     }
 
+    /**
+     * Configure results
+     *
+     * @param block the code used to configure
+     */
     fun results(block: Results<State, Result>.() -> Unit) {
         Results<State, Result>()
             .also(block)
@@ -36,6 +46,11 @@ internal constructor() {
             }
     }
 
+    /**
+     * Configure states
+     *
+     * @param block the code used to configure
+     */
     fun states(block: States<State>.() -> Unit) {
         States(initialState, observeScheduler)
             .also(block)
@@ -46,6 +61,11 @@ internal constructor() {
             }
     }
 
+    /**
+     * Configure errors
+     *
+     * @param block the code used to configure
+     */
     fun errors(block: Errors.() -> Unit) {
         Errors(retryOnError)
             .also(block)

@@ -1,4 +1,4 @@
-package se.gustavkarlsson.krate.core
+package se.gustavkarlsson.krate.core.dsl
 
 import Reducer
 import StatefulTransformer
@@ -12,7 +12,11 @@ import assertk.assertions.isTrue
 import com.nhaarman.mockitokotlin2.mock
 import io.reactivex.Scheduler
 import org.junit.Test
-import se.gustavkarlsson.krate.core.dsl.StoreBuilder
+import se.gustavkarlsson.krate.core.CreateNote
+import se.gustavkarlsson.krate.core.NoteCreated
+import se.gustavkarlsson.krate.core.NotesCommand
+import se.gustavkarlsson.krate.core.NotesResult
+import se.gustavkarlsson.krate.core.NotesState
 
 class StoreBuilderTest {
 

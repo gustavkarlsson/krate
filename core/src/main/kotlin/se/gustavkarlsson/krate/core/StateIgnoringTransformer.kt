@@ -7,11 +7,11 @@ import io.reactivex.Observable
 /**
  * A transformer that does not have access to state
  */
-class StateIgnoringTransformer<State : Any, Command : Any, Result : Any>(
+class StateIgnoringTransformer<Command : Any, Result : Any>(
     private val transform: StatelessTransformer<Command, Result>
-) : StatefulTransformer<State, Command, Result> {
+) : StatefulTransformer<Any, Command, Result> {
 
-    override fun invoke(commands: Observable<Command>, getState: () -> State): Observable<Result> {
+    override fun invoke(commands: Observable<Command>, getState: () -> Any): Observable<Result> {
         return transform(commands)
     }
 }
