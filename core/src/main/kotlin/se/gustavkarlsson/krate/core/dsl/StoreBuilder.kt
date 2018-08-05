@@ -1,7 +1,7 @@
 package se.gustavkarlsson.krate.core.dsl
 
 import Reducer
-import Transformer
+import StatefulTransformer
 import Watcher
 import io.reactivex.Scheduler
 import se.gustavkarlsson.krate.core.Store
@@ -9,7 +9,7 @@ import se.gustavkarlsson.krate.core.Store
 class StoreBuilder<State : Any, Command : Any, Result : Any>
 internal constructor() {
     private var initialState: State? = null
-    private val transformers = mutableListOf<Transformer<State, Command, Result>>()
+    private val transformers = mutableListOf<StatefulTransformer<State, Command, Result>>()
     private val reducers = mutableListOf<Reducer<State, Result>>()
     private val commandWatchers = mutableListOf<Watcher<Command>>()
     private val resultWatchers = mutableListOf<Watcher<Result>>()

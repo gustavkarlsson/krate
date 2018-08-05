@@ -1,7 +1,7 @@
 package se.gustavkarlsson.krate.core
 
 import Reducer
-import Transformer
+import StatefulTransformer
 import Watcher
 import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.Observable
@@ -19,7 +19,7 @@ import io.reactivex.Scheduler
 class Store<State : Any, Command : Any, Result : Any>
 internal constructor(
     initialState: State,
-    internal val transformers: List<Transformer<State, Command, Result>>,
+    internal val transformers: List<StatefulTransformer<State, Command, Result>>,
     internal val reducers: List<Reducer<State, Result>>,
     internal val commandWatchers: List<Watcher<Command>>,
     internal val resultWatchers: List<Watcher<Result>>,

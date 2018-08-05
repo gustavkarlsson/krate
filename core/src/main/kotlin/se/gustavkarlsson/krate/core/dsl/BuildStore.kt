@@ -1,7 +1,9 @@
-package se.gustavkarlsson.krate.core
+package se.gustavkarlsson.krate.core.dsl
+
+import se.gustavkarlsson.krate.core.Store
 
 /**
- * Creates a store
+ * Creates a store using the declarative DSL
  */
 fun <State : Any, Command : Any, Result : Any> buildStore(
     block: StoreBuilder<State, Command, Result>.() -> Unit

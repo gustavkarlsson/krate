@@ -1,6 +1,6 @@
 package se.gustavkarlsson.krate.core
 
-import Transformer
+import StatefulTransformer
 import io.reactivex.Observable
 import kotlin.reflect.KClass
 
@@ -9,8 +9,8 @@ import kotlin.reflect.KClass
  */
 class TypedTransformer<State : Any, Command : Any, Result : Any, C : Command>(
     private val type: KClass<C>,
-    private val transform: Transformer<State, C, Result>
-) : (Observable<Command>, () -> State) -> Observable<Result> {
+    private val transform: StatefulTransformer<State, C, Result>
+) : StatefulTransformer<State, Command, Result> {
 
     override fun invoke(commands: Observable<Command>, getState: () -> State): Observable<Result> {
         return transform(commands.ofType(type.javaObjectType), getState)

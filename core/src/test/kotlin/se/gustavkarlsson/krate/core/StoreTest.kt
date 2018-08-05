@@ -1,7 +1,7 @@
 package se.gustavkarlsson.krate.core
 
 import Reducer
-import Transformer
+import StatefulTransformer
 import Watcher
 import assertk.assert
 import assertk.assertions.isEqualTo
@@ -26,7 +26,7 @@ class StoreTest {
 
     private val newState = NotesState(listOf(Note(text), Note(text)))
 
-    private val mockTransformer1 = mock<Transformer<NotesState, NotesCommand, NotesResult>> {
+    private val mockTransformer1 = mock<StatefulTransformer<NotesState, NotesCommand, NotesResult>> {
         on(it.invoke(any(), any())).thenAnswer {
             val commands = it.arguments[0] as Observable<*>
             commands
@@ -34,7 +34,7 @@ class StoreTest {
         }
     }
 
-    private val mockTransformer2 = mock<Transformer<NotesState, NotesCommand, NotesResult>> {
+    private val mockTransformer2 = mock<StatefulTransformer<NotesState, NotesCommand, NotesResult>> {
         on(it.invoke(any(), any())).thenAnswer {
             val commands = it.arguments[0] as Observable<*>
             commands
@@ -43,7 +43,7 @@ class StoreTest {
         }
     }
 
-    private val mockTransformer3 = mock<Transformer<NotesState, NotesCommand, NotesResult>> {
+    private val mockTransformer3 = mock<StatefulTransformer<NotesState, NotesCommand, NotesResult>> {
         on(it.invoke(any(), any())).thenAnswer {
             val commands = it.arguments[0] as Observable<*>
             commands
