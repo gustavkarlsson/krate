@@ -4,11 +4,11 @@ import io.reactivex.Observable
 import org.junit.Assert.fail
 import org.junit.Test
 
-class StateIgnoringTransformerTest {
+class TransformerTest {
 
     @Test
     fun `transforms elements correctly`() {
-        val impl = StateIgnoringTransformer<Int, String> { it.map(Int::toString) }
+        val impl = Transformer<Int, String> { it.map(Int::toString) }
 
         val results = impl.invoke(Observable.just(5)) { Unit }
 
@@ -18,7 +18,7 @@ class StateIgnoringTransformerTest {
 
     @Test
     fun `does not run getState`() {
-        val impl = StateIgnoringTransformer<Int, String> { it.map(Int::toString) }
+        val impl = Transformer<Int, String> { it.map(Int::toString) }
 
         val results = impl.invoke(Observable.just(5)) { fail("getState was run but should not have") }
 

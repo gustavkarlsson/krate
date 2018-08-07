@@ -1,8 +1,8 @@
 package se.gustavkarlsson.krate.core
 
 import Reducer
-import StatefulTransformer
-import Watcher
+import StateAwareTransformer
+import Interceptor
 import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.Observable
 import io.reactivex.Scheduler
@@ -19,14 +19,12 @@ import io.reactivex.Scheduler
 class Store<State : Any, Command : Any, Result : Any>
 internal constructor(
     initialState: State,
-    internal val transformers: List<StatefulTransformer<State, Command, Result>>,
+    internal val transformers: List<StateAwareTransformer<State, Command, Result>>,
     internal val reducers: List<Reducer<State, Result>>,
-    internal val commandWatchers: List<Watcher<Command>>,
-    internal val resultWatchers: List<Watcher<Result>>,
-    internal val stateWatchers: List<Watcher<State>>,
-    internal val errorWatchers: List<Watcher<Throwable>>,
-    internal val observeScheduler: Scheduler?,
-    internal val retryOnError: Boolean
+    internal val commandInterceptors: List<Interceptor<Command>>,
+    internal val resultInterceptors: List<Interceptor<Result>>,
+    internal val stateInterceptors: List<Interceptor<State>>,
+    internal val observeScheduler: Scheduler?
 ) {
 
     /**
@@ -46,35 +44,23 @@ internal constructor(
     private val commands = PublishRelay.create<Command>().toSerialized()
 
     private val internalStates = commands
-        .watchCommands()
+        .intercept(commandInterceptors)
         .transformToResults()
-        .watchResults()
+        .intercept(resultInterceptors)
         .reduceToStates()
+        .intercept(stateInterceptors)
         .setCurrentState()
-        .watchStates()
-        .watchErrors()
-        .retryIfEnabled()
         .replay(1)
         .autoConnect()
 
-    private fun Observable<Command>.watchCommands(): Observable<Command> {
-        return doOnNext { value ->
-            commandWatchers.forEach { watch ->
-                watch(value)
-            }
+    private fun <T> Observable<T>.intercept(interceptors: List<Interceptor<T>>): Observable<T> {
+        return interceptors.fold(this) { observable, intercept ->
+            intercept(observable)
         }
     }
 
     private fun Observable<Command>.transformToResults(): Observable<Result> {
         return compose(CompositeTransformer(transformers, ::currentState))
-    }
-
-    private fun Observable<Result>.watchResults(): Observable<Result> {
-        return doOnNext { value ->
-            resultWatchers.forEach { watch ->
-                watch(value)
-            }
-        }
     }
 
     private fun Observable<Result>.reduceToStates(): Observable<State> {
@@ -86,26 +72,6 @@ internal constructor(
         return doOnNext { state ->
             currentState = state
         }
-    }
-
-    private fun Observable<State>.watchStates(): Observable<State> {
-        return doOnNext { value ->
-            stateWatchers.forEach { watch ->
-                watch(value)
-            }
-        }
-    }
-
-    private fun <T> Observable<T>.watchErrors(): Observable<T> {
-        return doOnError { throwable ->
-            errorWatchers.forEach { watch ->
-                watch(throwable)
-            }
-        }
-    }
-
-    private fun <T> Observable<T>.retryIfEnabled(): Observable<T> {
-        return retry { _ -> retryOnError }
     }
 
     /**

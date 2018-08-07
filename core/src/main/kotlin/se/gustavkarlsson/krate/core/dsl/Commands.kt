@@ -1,82 +1,70 @@
 package se.gustavkarlsson.krate.core.dsl
 
-import StatefulTransformer
-import StatelessTransformer
-import Watcher
-import se.gustavkarlsson.krate.core.StateIgnoringTransformer
+import Interceptor
+import StateIgnoringTransformer
+import StateAwareTransformer
+import se.gustavkarlsson.krate.core.Transformer
 import se.gustavkarlsson.krate.core.TypedTransformer
-import se.gustavkarlsson.krate.core.TypedWatcher
 
 class Commands<State : Any, Command : Any, Result : Any>
 internal constructor() {
-    internal val transformers = mutableListOf<StatefulTransformer<State, Command, Result>>()
-    internal val watchers = mutableListOf<Watcher<Command>>()
+    internal val transformers = mutableListOf<StateAwareTransformer<State, Command, Result>>()
+    internal val interceptors = mutableListOf<Interceptor<Command>>()
 
     /**
-     * Adds a stateful transformer to the store.
+     * Adds a state aware transformer to the store.
      *
-     * A stateful transformer has access to the current state and converts commands to results.
+     * A state aware transformer has access to the current state and converts commands to results.
      *
-     * @param transform the transformer function
+     * @param transformer the transformer function
      */
-    fun transformAllWithState(transform: StatefulTransformer<State, Command, Result>) {
-        transformers += transform
+    fun transformAllWithState(transformer: StateAwareTransformer<State, Command, Result>) {
+        transformers += transformer
     }
 
     /**
-     * Adds a stateful typed transformer to the store.
+     * Adds a state aware typed transformer to the store.
      *
-     * A stateful typed transformer has access to the current state and converts commands of type [C] to results.
+     * A state aware typed transformer has access to the current state and converts commands of type [C] to results.
      *
      * @param C the type of commands to transform
-     * @param transform the transformer function
+     * @param transformer the transformer function
      */
-    inline fun <reified C : Command> transformWithState(noinline transform: StatefulTransformer<State, C, Result>) {
-        transformAllWithState(TypedTransformer(C::class, transform))
+    inline fun <reified C : Command> transformWithState(noinline transformer: StateAwareTransformer<State, C, Result>) {
+        transformAllWithState(TypedTransformer(C::class, transformer))
     }
 
     /**
-     * Adds a stateless transformer to the store.
+     * Adds a transformer to the store.
      *
-     * A stateless transformer converts commands to results.
+     * A transformer converts commands to results.
      *
-     * @param transform the transformer function
+     * @param transformer the transformer function
      */
-    fun transformAll(transform: StatelessTransformer<Command, Result>) {
-        transformAllWithState(StateIgnoringTransformer(transform))
+    fun transformAll(transformer: StateIgnoringTransformer<Command, Result>) {
+        transformAllWithState(Transformer(transformer))
     }
 
     /**
-     * Adds a stateless typed transformer to the store.
+     * Adds a typed transformer to the store.
      *
-     * A stateless transformer converts commands of type [C] to results.
+     * A transformer converts commands of type [C] to results.
      *
      * @param C the type of commands to transform
-     * @param transform the transformer function
+     * @param transformer the transformer function
      */
-    inline fun <reified C : Command> transform(noinline transform: StatelessTransformer<C, Result>) {
-        transformWithState(StateIgnoringTransformer(transform))
+    inline fun <reified C : Command> transform(noinline transformer: StateIgnoringTransformer<C, Result>) {
+        transformWithState(Transformer(transformer))
     }
 
     /**
-     * Adds a command watcher to the store.
+     * Adds a command interceptor to the store.
      *
-     * A command watcher runs on each processed command
+     * A command interceptor can add further processing to the stream of commands
      *
-     * @param watch the watcher function
+     * @param interceptor the interceptor function
      */
-    fun watchAll(watch: Watcher<Command>) {
-        watchers += watch
-    }
-
-    /**
-     * Adds a typed command watcher to the store.
-     *
-     * A typed command watcher runs on each processed command of type [C]
-     *
-     * @param watch the watcher function
-     */
-    inline fun <reified C : Command> watch(noinline watch: Watcher<C>) {
-        watchAll(TypedWatcher(C::class, watch))
+    fun intercept(interceptor: Interceptor<Command>) {
+        interceptors += interceptor
     }
 }

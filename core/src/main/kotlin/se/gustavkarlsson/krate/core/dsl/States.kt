@@ -1,6 +1,6 @@
 package se.gustavkarlsson.krate.core.dsl
 
-import Watcher
+import Interceptor
 import io.reactivex.Scheduler
 
 class States<State : Any>
@@ -17,16 +17,16 @@ internal constructor(
      */
     var observeScheduler: Scheduler? = null
 ) {
-    internal val watchers = mutableListOf<Watcher<State>>()
+    internal val interceptors = mutableListOf<Interceptor<State>>()
 
     /**
-     * Adds a state watcher to the store.
+     * Adds a state interceptor to the store.
      *
-     * A state watcher runs on each processed state
+     * A state interceptor can add further processing to the stream of state
      *
-     * @param watch the watcher function
+     * @param interceptor the interceptor function
      */
-    fun watch(watch: Watcher<State>) {
-        watchers += watch
+    fun intercept(interceptor: Interceptor<State>) {
+        interceptors += interceptor
     }
 }
