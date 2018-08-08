@@ -1,22 +1,20 @@
 package se.gustavkarlsson.krate.core.dsl
 
 import Reducer
-import StatefulTransformer
-import Watcher
+import StateAwareTransformer
+import Interceptor
 import io.reactivex.Scheduler
 import se.gustavkarlsson.krate.core.Store
 
 class StoreBuilder<State : Any, Command : Any, Result : Any>
 internal constructor() {
     private var initialState: State? = null
-    private val transformers = mutableListOf<StatefulTransformer<State, Command, Result>>()
+    private val transformers = mutableListOf<StateAwareTransformer<State, Command, Result>>()
     private val reducers = mutableListOf<Reducer<State, Result>>()
-    private val commandWatchers = mutableListOf<Watcher<Command>>()
-    private val resultWatchers = mutableListOf<Watcher<Result>>()
-    private val stateWatchers = mutableListOf<Watcher<State>>()
-    private val errorWatchers = mutableListOf<Watcher<Throwable>>()
+    private val commandInterceptors = mutableListOf<Interceptor<Command>>()
+    private val resultInterceptors = mutableListOf<Interceptor<Result>>()
+    private val stateInterceptors = mutableListOf<Interceptor<State>>()
     private var observeScheduler: Scheduler? = null
-    private var retryOnError: Boolean = false
 
     /**
      * Configure commands
@@ -28,7 +26,7 @@ internal constructor() {
             .also(block)
             .let {
                 transformers += it.transformers
-                commandWatchers += it.watchers
+                commandInterceptors += it.interceptors
             }
     }
 
@@ -42,7 +40,7 @@ internal constructor() {
             .also(block)
             .let {
                 reducers += it.reducers
-                resultWatchers += it.watchers
+                resultInterceptors += it.interceptors
             }
     }
 
@@ -57,21 +55,7 @@ internal constructor() {
             .let {
                 initialState = it.initial
                 observeScheduler = it.observeScheduler
-                stateWatchers += it.watchers
-            }
-    }
-
-    /**
-     * Configure errors
-     *
-     * @param block the code used to configure
-     */
-    fun errors(block: Errors.() -> Unit) {
-        Errors(retryOnError)
-            .also(block)
-            .let {
-                retryOnError = it.retry
-                errorWatchers += it.watchers
+                stateInterceptors += it.interceptors
             }
     }
 
@@ -83,12 +67,10 @@ internal constructor() {
             initialState,
             transformers,
             reducers,
-            commandWatchers,
-            resultWatchers,
-            stateWatchers,
-            errorWatchers,
-            observeScheduler,
-            retryOnError
+            commandInterceptors,
+            resultInterceptors,
+            stateInterceptors,
+            observeScheduler
         )
     }
 }

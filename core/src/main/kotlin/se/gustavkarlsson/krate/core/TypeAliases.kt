@@ -1,10 +1,11 @@
 import io.reactivex.Observable
 
-internal typealias StatelessTransformer<Command, Result> = (Observable<Command>) -> Observable<Result>
+typealias StateIgnoringTransformer<Command, Result> = (Observable<Command>) -> Observable<Result>
 
-internal typealias StatefulTransformer<State, Command, Result> =
-        (Observable<Command>, () -> State) -> Observable<Result>
+typealias StateAwareTransformer<State, Command, Result> = (Observable<Command>, () -> State) -> Observable<Result>
 
-internal typealias Reducer<State, Result> = (State, Result) -> State
+typealias Reducer<State, Result> = (State, Result) -> State
 
-internal typealias Watcher<Type> = (Type) -> Unit
+typealias Interceptor<Type> = (Observable<Type>) -> Observable<Type>
+
+typealias Watcher<Type> = (Type) -> Unit

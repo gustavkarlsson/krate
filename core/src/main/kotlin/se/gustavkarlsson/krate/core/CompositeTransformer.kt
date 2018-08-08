@@ -1,13 +1,13 @@
 package se.gustavkarlsson.krate.core
 
-import StatefulTransformer
-import StatelessTransformer
+import StateAwareTransformer
+import StateIgnoringTransformer
 import io.reactivex.Observable
 
-class CompositeTransformer<State, Command, Result>(
-    private val transformers: List<StatefulTransformer<State, Command, Result>>,
+internal class CompositeTransformer<State, Command, Result>(
+    private val transformers: List<StateAwareTransformer<State, Command, Result>>,
     private val getCurrentState: () -> State
-) : StatelessTransformer<Command, Result> {
+) : StateIgnoringTransformer<Command, Result> {
 
     override fun invoke(commands: Observable<Command>): Observable<Result> {
         return commands.publish {
@@ -16,7 +16,7 @@ class CompositeTransformer<State, Command, Result>(
     }
 
     private fun Observable<Command>.splitAndTransform(
-        transformers: List<StatefulTransformer<State, Command, Result>>,
+        transformers: List<StateAwareTransformer<State, Command, Result>>,
         getState: () -> State
     ): List<Observable<Result>> {
         return transformers
