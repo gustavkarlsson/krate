@@ -1,6 +1,6 @@
 package se.gustavkarlsson.krate.samples.lanterna.store
 
-import io.reactivex.Observable
+import io.reactivex.Flowable
 import se.gustavkarlsson.krate.core.dsl.buildStore
 import se.gustavkarlsson.krate.samples.lanterna.api.github
 
@@ -15,16 +15,16 @@ val store = buildStore<State, Command, Result> {
             commands.flatMap {
                 val state = getState()
                 if (state.isLoadingNewRepos) {
-                    Observable.empty<Result>()
+                    Flowable.empty<Result>()
                 } else {
                     val lastId = state.repos.lastOrNull()?.id
                     github.getRepos(lastId)
-                        .flatMapObservable {
-                            Observable.just(Result.LoadingMoreRepos(false), Result.LoadedMoreRepos(it))
+                        .flatMapPublisher {
+                            Flowable.just(Result.LoadingMoreRepos(false), Result.LoadedMoreRepos(it))
                         }
                         .onErrorResumeNext { throwable: Throwable ->
                             val error = throwable.message ?: "Failed to load repos"
-                            Observable.just(Result.LoadingMoreRepos(false), Result.GotError(error))
+                            Flowable.just(Result.LoadingMoreRepos(false), Result.GotError(error))
                         }
                         .startWith(Result.LoadingMoreRepos(true))
                 }
@@ -35,12 +35,12 @@ val store = buildStore<State, Command, Result> {
             commands.switchMap {
                 val repo = getState().repos[it.index]
                 github.getRepo(repo.owner.login, repo.name)
-                    .flatMapObservable {
-                        Observable.just(Result.LoadingRepoDetails(false), Result.LoadedRepoDetails(it))
+                    .flatMapPublisher {
+                        Flowable.just(Result.LoadingRepoDetails(false), Result.LoadedRepoDetails(it))
                     }
                     .onErrorResumeNext { throwable: Throwable ->
                         val error = throwable.message ?: "Failed to load repo: ${repo.name}"
-                        Observable.just(Result.LoadingRepoDetails(false), Result.GotError(error))
+                        Flowable.just(Result.LoadingRepoDetails(false), Result.GotError(error))
                     }
                     .startWith(Result.LoadingRepoDetails(true))
             }

@@ -1,7 +1,7 @@
 package se.gustavkarlsson.krate.core
 
 import StateAwareTransformer
-import io.reactivex.Observable
+import io.reactivex.Flowable
 import kotlin.reflect.KClass
 
 /**
@@ -12,7 +12,7 @@ class TypedTransformer<State : Any, Command : Any, Result : Any, C : Command>(
     private val transform: StateAwareTransformer<State, C, Result>
 ) : StateAwareTransformer<State, Command, Result> {
 
-    override fun invoke(commands: Observable<Command>, getState: () -> State): Observable<Result> {
+    override fun invoke(commands: Flowable<Command>, getState: () -> State): Flowable<Result> {
         return transform(commands.ofType(type.javaObjectType), getState)
     }
 }

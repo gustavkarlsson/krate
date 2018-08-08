@@ -2,23 +2,23 @@ package se.gustavkarlsson.krate.core
 
 import StateAwareTransformer
 import StateIgnoringTransformer
-import io.reactivex.Observable
+import io.reactivex.Flowable
 
 internal class CompositeTransformer<State, Command, Result>(
     private val transformers: List<StateAwareTransformer<State, Command, Result>>,
     private val getCurrentState: () -> State
 ) : StateIgnoringTransformer<Command, Result> {
 
-    override fun invoke(commands: Observable<Command>): Observable<Result> {
+    override fun invoke(commands: Flowable<Command>): Flowable<Result> {
         return commands.publish {
-            Observable.merge(it.splitAndTransform(transformers, getCurrentState))
+            Flowable.merge(it.splitAndTransform(transformers, getCurrentState))
         }
     }
 
-    private fun Observable<Command>.splitAndTransform(
+    private fun Flowable<Command>.splitAndTransform(
         transformers: List<StateAwareTransformer<State, Command, Result>>,
         getState: () -> State
-    ): List<Observable<Result>> {
+    ): List<Flowable<Result>> {
         return transformers
             .map { transform ->
                 transform(this, getState)

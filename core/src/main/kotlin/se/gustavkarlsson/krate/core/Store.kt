@@ -4,7 +4,8 @@ import Reducer
 import StateAwareTransformer
 import Interceptor
 import com.jakewharton.rxrelay2.PublishRelay
-import io.reactivex.Observable
+import io.reactivex.BackpressureStrategy
+import io.reactivex.Flowable
 import io.reactivex.Scheduler
 
 /**
@@ -44,50 +45,53 @@ internal constructor(
     private val commands = PublishRelay.create<Command>().toSerialized()
 
     private val internalStates = commands
+        .toFlowable(BackpressureStrategy.MISSING)
+        .onBackpressureBuffer(true)
         .intercept(commandInterceptors)
         .transformToResults()
         .intercept(resultInterceptors)
         .reduceToStates()
         .intercept(stateInterceptors)
+        .onBackpressureLatest()
         .setCurrentState()
         .replay(1)
         .autoConnect()
 
-    private fun <T> Observable<T>.intercept(interceptors: List<Interceptor<T>>): Observable<T> {
-        return interceptors.fold(this) { observable, intercept ->
-            intercept(observable)
+    private fun <T> Flowable<T>.intercept(interceptors: List<Interceptor<T>>): Flowable<T> {
+        return interceptors.fold(this) { stream, intercept ->
+            intercept(stream)
         }
     }
 
-    private fun Observable<Command>.transformToResults(): Observable<Result> {
+    private fun Flowable<Command>.transformToResults(): Flowable<Result> {
         return compose(CompositeTransformer(transformers, ::currentState))
     }
 
-    private fun Observable<Result>.reduceToStates(): Observable<State> {
+    private fun Flowable<Result>.reduceToStates(): Flowable<State> {
         return serialize()
             .scanWith(::currentState, CompositeReducer(reducers))
     }
 
-    private fun Observable<State>.setCurrentState(): Observable<State> {
+    private fun Flowable<State>.setCurrentState(): Flowable<State> {
         return doOnNext { state ->
             currentState = state
         }
     }
 
     /**
-     * An observable stream of state updates produced by this store,
+     * An stream of state updates produced by this store,
      * starting with the current state
      *
      * State updates will be observed on the observe [Scheduler] if one was specified.
      *
      * *Note: All subscribers share a single upstream subscription,
-     * so there is no need to use publishing operators such as [Observable.publish].*
-     * @return An [Observable] of [State] updates
+     * so there is no need to use publishing operators such as [Flowable.publish].*
+     * @return A stream of [State] updates
      */
-    val states: Observable<State> = internalStates
+    val states: Flowable<State> = internalStates
         .setObserver()
 
-    private fun Observable<State>.setObserver(): Observable<State> {
+    private fun Flowable<State>.setObserver(): Flowable<State> {
         return observeScheduler?.let {
             observeOn(it)
         } ?: this
