@@ -2,7 +2,10 @@ package se.gustavkarlsson.krate.core.dsl
 
 import Interceptor
 import Reducer
+import Watcher
 import se.gustavkarlsson.krate.core.TypedReducer
+import se.gustavkarlsson.krate.core.TypedWatcher
+import se.gustavkarlsson.krate.core.WatchingInterceptor
 
 class Results<State : Any, Result : Any>
 internal constructor() {
@@ -41,5 +44,27 @@ internal constructor() {
      */
     fun intercept(interceptor: Interceptor<Result>) {
         interceptors += interceptor
+    }
+
+    /**
+     * Adds a watching result interceptor to the store.
+     *
+     * A watching result interceptor runs on each processed result
+     *
+     * @param watcher the watcher function
+     */
+    fun watchAll(watcher: Watcher<Result>) {
+        intercept(WatchingInterceptor(watcher))
+    }
+
+    /**
+     * Adds a typed watching result interceptor to the store.
+     *
+     * A typed watching result interceptor runs on each processed result of type [R]
+     *
+     * @param watcher the watcher function
+     */
+    inline fun <reified R : Result> watch(noinline watcher: Watcher<R>) {
+        watchAll(TypedWatcher(R::class, watcher))
     }
 }

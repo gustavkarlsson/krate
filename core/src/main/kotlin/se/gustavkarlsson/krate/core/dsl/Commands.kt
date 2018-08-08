@@ -3,8 +3,11 @@ package se.gustavkarlsson.krate.core.dsl
 import Interceptor
 import StateIgnoringTransformer
 import StateAwareTransformer
+import Watcher
 import se.gustavkarlsson.krate.core.Transformer
 import se.gustavkarlsson.krate.core.TypedTransformer
+import se.gustavkarlsson.krate.core.TypedWatcher
+import se.gustavkarlsson.krate.core.WatchingInterceptor
 
 class Commands<State : Any, Command : Any, Result : Any>
 internal constructor() {
@@ -66,5 +69,27 @@ internal constructor() {
      */
     fun intercept(interceptor: Interceptor<Command>) {
         interceptors += interceptor
+    }
+
+    /**
+     * Adds a watching command interceptor to the store.
+     *
+     * A watching command interceptor runs on each processed command
+     *
+     * @param watcher the watcher function
+     */
+    fun watchAll(watcher: Watcher<Command>) {
+        intercept(WatchingInterceptor(watcher))
+    }
+
+    /**
+     * Adds a typed watching command interceptor to the store.
+     *
+     * A typed watching command interceptor runs on each processed command of type [C]
+     *
+     * @param watcher the watcher function
+     */
+    inline fun <reified C : Command> watch(noinline watcher: Watcher<C>) {
+        watchAll(TypedWatcher(C::class, watcher))
     }
 }

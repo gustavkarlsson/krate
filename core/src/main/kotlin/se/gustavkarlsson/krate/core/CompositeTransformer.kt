@@ -4,7 +4,7 @@ import StateAwareTransformer
 import StateIgnoringTransformer
 import io.reactivex.Observable
 
-class CompositeTransformer<State, Command, Result>(
+internal class CompositeTransformer<State, Command, Result>(
     private val transformers: List<StateAwareTransformer<State, Command, Result>>,
     private val getCurrentState: () -> State
 ) : StateIgnoringTransformer<Command, Result> {
