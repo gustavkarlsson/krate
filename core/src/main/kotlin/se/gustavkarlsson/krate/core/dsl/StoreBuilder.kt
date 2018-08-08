@@ -6,6 +6,7 @@ import Interceptor
 import io.reactivex.Scheduler
 import se.gustavkarlsson.krate.core.Store
 
+@StoreDsl
 class StoreBuilder<State : Any, Command : Any, Result : Any>
 internal constructor() {
     private var initialState: State? = null

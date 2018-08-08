@@ -9,6 +9,7 @@ import se.gustavkarlsson.krate.core.TypedTransformer
 import se.gustavkarlsson.krate.core.TypedWatcher
 import se.gustavkarlsson.krate.core.WatchingInterceptor
 
+@StoreDsl
 class Commands<State : Any, Command : Any, Result : Any>
 internal constructor() {
     internal val transformers = mutableListOf<StateAwareTransformer<State, Command, Result>>()

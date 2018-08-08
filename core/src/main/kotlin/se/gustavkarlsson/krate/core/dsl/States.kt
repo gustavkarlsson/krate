@@ -5,6 +5,7 @@ import Watcher
 import io.reactivex.Scheduler
 import se.gustavkarlsson.krate.core.WatchingInterceptor
 
+@StoreDsl
 class States<State : Any>
 internal constructor(
     /**
