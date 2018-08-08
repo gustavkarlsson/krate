@@ -7,6 +7,7 @@ import se.gustavkarlsson.krate.core.TypedReducer
 import se.gustavkarlsson.krate.core.TypedWatcher
 import se.gustavkarlsson.krate.core.WatchingInterceptor
 
+@StoreDsl
 class Results<State : Any, Result : Any>
 internal constructor() {
     internal val reducers = mutableListOf<Reducer<State, Result>>()
