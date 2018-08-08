@@ -2,8 +2,8 @@ package se.gustavkarlsson.krate.core
 
 import Interceptor
 import Watcher
-import io.reactivex.Observable
+import io.reactivex.Flowable
 
 internal class WatchingInterceptor<T>(private val watcher: Watcher<T>) : Interceptor<T> {
-    override fun invoke(observable: Observable<T>): Observable<T> = observable.doOnNext(watcher)
+    override fun invoke(stream: Flowable<T>): Flowable<T> = stream.doOnNext(watcher)
 }

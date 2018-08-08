@@ -6,21 +6,21 @@ import assertk.assertions.isEqualTo
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
-import io.reactivex.Observable
+import io.reactivex.Flowable
 import org.junit.Test
 
 class CompositeTransformerTest {
 
     private val mockTransformer1 = mock<StateAwareTransformer<Long, Boolean, Int>> {
         on(it.invoke(any(), any())).thenAnswer {
-            (it.arguments[0] as Observable<*>)
+            (it.arguments[0] as Flowable<*>)
                 .map { 1 }
         }
     }
     private val mockTransformer2 = mock<StateAwareTransformer<Long, Boolean, Int>> {
         on(it.invoke(any(), any())).thenAnswer {
-            (it.arguments[0] as Observable<*>)
-                .flatMap { Observable.just(2, 3) }
+            (it.arguments[0] as Flowable<*>)
+                .flatMap { Flowable.just(2, 3) }
         }
     }
 
@@ -30,7 +30,7 @@ class CompositeTransformerTest {
     fun `no transformers results in empty stream`() {
         val impl = CompositeTransformer<Long, Boolean, Int>(emptyList()) { 0 }
 
-        val results = impl.invoke(Observable.just(true))
+        val results = impl.invoke(Flowable.just(true))
 
         val observer = results.test()
         observer.assertValueCount(0)
@@ -39,7 +39,7 @@ class CompositeTransformerTest {
 
     @Test
     fun `transformers are run in order`() {
-        impl.invoke(Observable.just(true))
+        impl.invoke(Flowable.just(true))
             .subscribe()
 
         inOrder(mockTransformer1, mockTransformer2) {
@@ -50,16 +50,16 @@ class CompositeTransformerTest {
 
     @Test
     fun `transformer results are merged`() {
-        val results = impl.invoke(Observable.just(true))
+        val results = impl.invoke(Flowable.just(true))
 
         val observer = results.test()
         observer.assertValueSet(setOf(1, 2, 3))
     }
 
     @Test
-    fun `source observable is subscribed only once with multiple transformers`() {
+    fun `source stream is subscribed only once with multiple transformers`() {
         var subscriptions = 0
-        val source = Observable.empty<Boolean>()
+        val source = Flowable.empty<Boolean>()
             .doOnSubscribe { subscriptions++ }
 
         impl.invoke(source)

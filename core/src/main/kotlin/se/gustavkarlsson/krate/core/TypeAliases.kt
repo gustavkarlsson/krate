@@ -1,11 +1,11 @@
-import io.reactivex.Observable
+import io.reactivex.Flowable
 
-typealias StateIgnoringTransformer<Command, Result> = (Observable<Command>) -> Observable<Result>
+typealias StateIgnoringTransformer<Command, Result> = (Flowable<Command>) -> Flowable<Result>
 
-typealias StateAwareTransformer<State, Command, Result> = (Observable<Command>, () -> State) -> Observable<Result>
+typealias StateAwareTransformer<State, Command, Result> = (Flowable<Command>, () -> State) -> Flowable<Result>
 
 typealias Reducer<State, Result> = (State, Result) -> State
 
-typealias Interceptor<Type> = (Observable<Type>) -> Observable<Type>
+typealias Interceptor<Type> = (Flowable<Type>) -> Flowable<Type>
 
 typealias Watcher<Type> = (Type) -> Unit

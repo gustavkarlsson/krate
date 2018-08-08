@@ -8,7 +8,7 @@ import assertk.assertions.isEqualTo
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
-import io.reactivex.Observable
+import io.reactivex.Flowable
 import io.reactivex.rxkotlin.ofType
 import io.reactivex.schedulers.TestScheduler
 import org.junit.Before
@@ -25,15 +25,15 @@ class StoreTest {
 
     private val mockTransformer1 = mock<StateAwareTransformer<NotesState, NotesCommand, NotesResult>> {
         on(it.invoke(any(), any())).thenAnswer {
-            val commands = it.arguments[0] as Observable<*>
+            val commands = it.arguments[0] as Flowable<*>
             commands
-                .flatMap { Observable.empty<NotesResult>() }
+                .flatMap { Flowable.empty<NotesResult>() }
         }
     }
 
     private val mockTransformer2 = mock<StateAwareTransformer<NotesState, NotesCommand, NotesResult>> {
         on(it.invoke(any(), any())).thenAnswer {
-            val commands = it.arguments[0] as Observable<*>
+            val commands = it.arguments[0] as Flowable<*>
             commands
                 .ofType<CreateNote>()
                 .map { transformer2Result }
