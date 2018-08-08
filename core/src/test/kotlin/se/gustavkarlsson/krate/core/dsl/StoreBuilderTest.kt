@@ -3,6 +3,7 @@ package se.gustavkarlsson.krate.core.dsl
 import Reducer
 import StateAwareTransformer
 import Interceptor
+import Watcher
 import assertk.assert
 import assertk.assertAll
 import assertk.assertions.containsExactly
@@ -40,6 +41,11 @@ class StoreBuilderTest {
             it.arguments[0]
         }
     }
+    private val mockCommandWatcher = mock<Watcher<NotesCommand>>()
+    private val mockTypedCommandWatcher = mock<Watcher<CreateNote>>()
+    private val mockResultWatcher = mock<Watcher<NotesResult>>()
+    private val mockTypedResultWatcher = mock<Watcher<NoteCreated>>()
+    private val mockStateWatcher = mock<Watcher<NotesState>>()
     private val mockObserveScheduler = mock<Scheduler>()
 
     @Test
@@ -48,18 +54,23 @@ class StoreBuilderTest {
             .apply {
                 states {
                     initial = mockState
+                    watchAll(mockStateWatcher)
                     intercept(mockStateInterceptor)
                     observeScheduler = mockObserveScheduler
                 }
                 commands {
                     transformAllWithState(mockTransformer)
                     transformWithState(mockTypedTransformer)
+                    watchAll(mockCommandWatcher)
                     intercept(mockCommandInterceptor)
+                    watch(mockTypedCommandWatcher)
                 }
                 results {
                     reduceAll(mockReducer)
                     reduce(mockTypedReducer)
+                    watchAll(mockResultWatcher)
                     intercept(mockResultInterceptor)
+                    watch(mockTypedResultWatcher)
                 }
             }
             .build()
@@ -71,9 +82,9 @@ class StoreBuilderTest {
                 assert(transformers[0]).isEqualTo(mockTransformer)
                 assert(reducers).hasSize(2)
                 assert(reducers[0]).isEqualTo(mockReducer)
-                assert(commandInterceptors).containsExactly(mockCommandInterceptor)
-                assert(resultInterceptors).containsExactly(mockResultInterceptor)
-                assert(stateInterceptors).containsExactly(mockStateInterceptor)
+                assert(commandInterceptors).hasSize(3)
+                assert(resultInterceptors).hasSize(3)
+                assert(stateInterceptors).hasSize(2)
                 assert(observeScheduler).isEqualTo(mockObserveScheduler)
             }
         }
