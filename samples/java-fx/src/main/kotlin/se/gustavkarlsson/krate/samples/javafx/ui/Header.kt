@@ -10,10 +10,10 @@ import tornadofx.vbox
 
 class Header : View() {
 
-    lateinit var textField: TextField
+    lateinit var newTodoTextField: TextField
 
     override val root = vbox {
-        textField = textfield()
+        newTodoTextField = textfield()
     }
 
     init {
@@ -22,8 +22,8 @@ class Header : View() {
     }
 
     private fun bindView() {
-        textField.action {
-            store.issue(AddTodo(textField.text))
+        newTodoTextField.action {
+            store.issue(AddTodo(newTodoTextField.text))
         }
     }
 
@@ -32,13 +32,13 @@ class Header : View() {
             .map { it.creatingTodo }
             .distinctUntilChanged()
             .subscribe { creating ->
-                textField.disableProperty().set(creating)
+                newTodoTextField.isDisable = creating
                 if (creating) {
-                    textField.clear()
-                    textField.promptText = "Adding..."
+                    newTodoTextField.clear()
+                    newTodoTextField.promptText = "Adding..."
                 } else {
-                    textField.promptText = ""
-                    textField.requestFocus()
+                    newTodoTextField.promptText = ""
+                    newTodoTextField.requestFocus()
                 }
             }
     }
