@@ -9,11 +9,8 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 class TodoRepository {
-
     private val nextId = AtomicInteger(1)
-
     private val random = Random()
-
     private val data = mutableListOf<Todo>()
 
     fun add(text: String, isCompleted: Boolean): Single<Todo> {

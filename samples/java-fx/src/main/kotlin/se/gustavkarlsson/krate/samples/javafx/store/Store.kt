@@ -6,7 +6,6 @@ import se.gustavkarlsson.krate.core.dsl.buildStore
 import se.gustavkarlsson.krate.samples.javafx.repo.TodoRepository
 
 val store = buildStore<State, Command, Result> {
-
     val todoRepository = TodoRepository()
 
     states {
