@@ -3,7 +3,7 @@ package se.gustavkarlsson.krate.samples.tornadofx.ui
 import io.reactivex.Flowable
 import se.gustavkarlsson.krate.samples.tornadofx.store.AddTodo
 import se.gustavkarlsson.krate.samples.tornadofx.store.DeleteTodo
-import se.gustavkarlsson.krate.samples.tornadofx.store.UpdateTodo
+import se.gustavkarlsson.krate.samples.tornadofx.store.ToggleTodoCompleted
 import se.gustavkarlsson.krate.samples.tornadofx.store.store
 
 class MainViewModel {
@@ -13,10 +13,7 @@ class MainViewModel {
     }
 
     fun toggleCompleted(item: TodoItem) {
-        item.todo.let { todo ->
-            val changedTodo = todo.copy(isCompleted = !todo.isCompleted)
-            store.issue(UpdateTodo(changedTodo))
-        }
+        store.issue(ToggleTodoCompleted(item.todo))
     }
 
     fun delete(item: TodoItem) {

@@ -25,9 +25,12 @@ val store = buildStore<State, Command, Result> {
                 }
         }
 
-        transform<UpdateTodo> { commands ->
+        transform<ToggleTodoCompleted> { commands ->
             commands
-                .map(UpdateTodo::todo)
+                .map(ToggleTodoCompleted::todo)
+                .map { todo ->
+                    todo.copy(isCompleted = !todo.isCompleted)
+                }
                 .flatMap { todo ->
                     todoRepository.update(todo)
                         .toFlowable()
