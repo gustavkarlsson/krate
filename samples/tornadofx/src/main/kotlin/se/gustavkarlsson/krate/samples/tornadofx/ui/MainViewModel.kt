@@ -1,10 +1,10 @@
-package se.gustavkarlsson.krate.samples.javafx.ui
+package se.gustavkarlsson.krate.samples.tornadofx.ui
 
 import io.reactivex.Flowable
-import se.gustavkarlsson.krate.samples.javafx.store.AddTodo
-import se.gustavkarlsson.krate.samples.javafx.store.DeleteTodo
-import se.gustavkarlsson.krate.samples.javafx.store.UpdateTodo
-import se.gustavkarlsson.krate.samples.javafx.store.store
+import se.gustavkarlsson.krate.samples.tornadofx.store.AddTodo
+import se.gustavkarlsson.krate.samples.tornadofx.store.DeleteTodo
+import se.gustavkarlsson.krate.samples.tornadofx.store.UpdateTodo
+import se.gustavkarlsson.krate.samples.tornadofx.store.store
 
 class MainViewModel {
 

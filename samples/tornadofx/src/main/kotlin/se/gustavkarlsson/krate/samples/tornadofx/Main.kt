@@ -1,7 +1,7 @@
-package se.gustavkarlsson.krate.samples.javafx
+package se.gustavkarlsson.krate.samples.tornadofx
 
 import javafx.application.Application
-import se.gustavkarlsson.krate.samples.javafx.ui.MainView
+import se.gustavkarlsson.krate.samples.tornadofx.ui.MainView
 import tornadofx.App
 
 fun main(args: Array<String>) {

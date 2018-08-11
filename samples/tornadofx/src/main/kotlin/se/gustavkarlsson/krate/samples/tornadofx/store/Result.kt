@@ -1,6 +1,6 @@
-package se.gustavkarlsson.krate.samples.javafx.store
+package se.gustavkarlsson.krate.samples.tornadofx.store
 
-import se.gustavkarlsson.krate.samples.javafx.models.Todo
+import se.gustavkarlsson.krate.samples.tornadofx.models.Todo
 
 sealed class Result
 object CreatingNewTodo : Result()

@@ -1,9 +1,9 @@
-package se.gustavkarlsson.krate.samples.javafx.store
+package se.gustavkarlsson.krate.samples.tornadofx.store
 
 import io.reactivex.Single
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler
 import se.gustavkarlsson.krate.core.dsl.buildStore
-import se.gustavkarlsson.krate.samples.javafx.repo.TodoRepository
+import se.gustavkarlsson.krate.samples.tornadofx.repo.TodoRepository
 
 val store = buildStore<State, Command, Result> {
     val todoRepository = TodoRepository()

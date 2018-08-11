@@ -1,6 +1,6 @@
-package se.gustavkarlsson.krate.samples.javafx.ui
+package se.gustavkarlsson.krate.samples.tornadofx.ui
 
-import se.gustavkarlsson.krate.samples.javafx.models.Todo
+import se.gustavkarlsson.krate.samples.tornadofx.models.Todo
 
 data class TodoItem(val todo: Todo, private val isUpdating: Boolean) {
     override fun toString(): String {

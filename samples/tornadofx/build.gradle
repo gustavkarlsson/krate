@@ -1,6 +1,6 @@
 apply plugin: "application"
 
-mainClassName = "se.gustavkarlsson.krate.samples.javafx.MainKt"
+mainClassName = "se.gustavkarlsson.krate.samples.tornadofx.MainKt"
 
 dependencies {
     implementation project(":core")

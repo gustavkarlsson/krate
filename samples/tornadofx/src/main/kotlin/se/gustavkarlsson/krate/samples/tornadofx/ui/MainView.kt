@@ -1,4 +1,4 @@
-package se.gustavkarlsson.krate.samples.javafx.ui
+package se.gustavkarlsson.krate.samples.tornadofx.ui
 
 import javafx.scene.control.ListView
 import javafx.scene.control.TextField

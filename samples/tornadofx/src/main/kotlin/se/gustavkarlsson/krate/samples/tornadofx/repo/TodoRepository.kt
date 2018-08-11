@@ -1,9 +1,9 @@
-package se.gustavkarlsson.krate.samples.javafx.repo
+package se.gustavkarlsson.krate.samples.tornadofx.repo
 
 import io.reactivex.Completable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
-import se.gustavkarlsson.krate.samples.javafx.models.Todo
+import se.gustavkarlsson.krate.samples.tornadofx.models.Todo
 import java.util.Random
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
