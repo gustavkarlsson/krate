@@ -1,7 +1,6 @@
 package se.gustavkarlsson.krate.samples.javafx.repo
 
 import io.reactivex.Completable
-import io.reactivex.Flowable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import se.gustavkarlsson.krate.samples.javafx.models.Todo
