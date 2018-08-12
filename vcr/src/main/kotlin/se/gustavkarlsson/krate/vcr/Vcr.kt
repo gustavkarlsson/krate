@@ -44,7 +44,7 @@ abstract class Vcr<State : Any, Command : Any, Result : Any>(
                     lastSampleTime += delay
                     Sample(state, delay)
                 }
-                .subscribe(tape::record)
+                .subscribe(tape::append)
         }
     }
 
