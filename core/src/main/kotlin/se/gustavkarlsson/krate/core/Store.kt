@@ -1,12 +1,12 @@
 package se.gustavkarlsson.krate.core
 
+import Interceptor
 import Reducer
 import StateAwareTransformer
-import Interceptor
-import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
 import io.reactivex.Scheduler
+import io.reactivex.subjects.PublishSubject
 
 /**
  * Manages application (sub)state by accepting commands,
@@ -40,9 +40,9 @@ internal constructor(
      *
      * @param command the command to issue
      */
-    fun issue(command: Command) = commands.accept(command)
+    fun issue(command: Command) = commands.onNext(command)
 
-    private val commands = PublishRelay.create<Command>().toSerialized()
+    private val commands = PublishSubject.create<Command>().toSerialized()
 
     private val internalStates = commands
         .toFlowable(BackpressureStrategy.MISSING)
