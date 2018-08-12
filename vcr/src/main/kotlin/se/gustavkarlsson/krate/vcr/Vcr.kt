@@ -42,7 +42,7 @@ abstract class Vcr<State : Any, Command : Any, Result : Any>(
                 .map { state ->
                     val delay = currentTimeMillis() - lastSampleTime
                     lastSampleTime += delay
-                    Sample(delay, state)
+                    Sample(state, delay)
                 }
                 .subscribe(tape::record)
         }
@@ -69,6 +69,15 @@ abstract class Vcr<State : Any, Command : Any, Result : Any>(
                 .subscribe(playingSubject::onNext)
         }
     }
+
+    val isRecording: Boolean
+        get() = recordingInProgress != null
+
+    val isPlaying: Boolean
+        get() = playingInProgress != null
+
+    val isStopped: Boolean
+        get() = !isRecording && !isPlaying
 
     protected abstract fun newTape(name: String): Tape<State>
 
