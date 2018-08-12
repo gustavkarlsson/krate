@@ -9,7 +9,6 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import io.reactivex.Flowable
-import io.reactivex.rxkotlin.ofType
 import io.reactivex.schedulers.TestScheduler
 import org.junit.Before
 import org.junit.Test
@@ -35,7 +34,7 @@ class StoreTest {
         on(it.invoke(any(), any())).thenAnswer {
             val commands = it.arguments[0] as Flowable<*>
             commands
-                .ofType<CreateNote>()
+                .ofType(CreateNote::class.java)
                 .map { transformer2Result }
         }
     }
