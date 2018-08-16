@@ -1,6 +1,5 @@
 package se.gustavkarlsson.krate.core
 
-import Reducer
 import kotlin.reflect.KClass
 
 /**

@@ -1,9 +1,5 @@
 package se.gustavkarlsson.krate.core.dsl
 
-import Reducer
-import StateAwareTransformer
-import Interceptor
-import Watcher
 import assertk.assert
 import assertk.assertAll
 import assertk.assertions.hasSize
@@ -13,10 +9,14 @@ import com.nhaarman.mockitokotlin2.mock
 import io.reactivex.Scheduler
 import org.junit.Test
 import se.gustavkarlsson.krate.core.CreateNote
+import se.gustavkarlsson.krate.core.Interceptor
 import se.gustavkarlsson.krate.core.NoteCreated
 import se.gustavkarlsson.krate.core.NotesCommand
 import se.gustavkarlsson.krate.core.NotesResult
 import se.gustavkarlsson.krate.core.NotesState
+import se.gustavkarlsson.krate.core.Reducer
+import se.gustavkarlsson.krate.core.StateAwareTransformer
+import se.gustavkarlsson.krate.core.Watcher
 
 class StoreBuilderTest {
 

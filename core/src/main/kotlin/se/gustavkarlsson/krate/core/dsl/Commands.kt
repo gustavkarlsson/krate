@@ -1,12 +1,12 @@
 package se.gustavkarlsson.krate.core.dsl
 
-import Interceptor
-import StateAwareTransformer
-import StateIgnoringTransformer
-import Watcher
+import se.gustavkarlsson.krate.core.Interceptor
+import se.gustavkarlsson.krate.core.StateAwareTransformer
+import se.gustavkarlsson.krate.core.StateIgnoringTransformer
 import se.gustavkarlsson.krate.core.Transformer
 import se.gustavkarlsson.krate.core.TypedTransformer
 import se.gustavkarlsson.krate.core.TypedWatcher
+import se.gustavkarlsson.krate.core.Watcher
 import se.gustavkarlsson.krate.core.WatchingInterceptor
 
 /**

@@ -1,8 +1,5 @@
 package se.gustavkarlsson.krate.core
 
-import Interceptor
-import Reducer
-import StateAwareTransformer
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
 import io.reactivex.Scheduler

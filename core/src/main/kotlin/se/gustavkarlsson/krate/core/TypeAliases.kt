@@ -1,3 +1,5 @@
+package se.gustavkarlsson.krate.core
+
 import io.reactivex.Flowable
 
 typealias StateIgnoringTransformer<Command, Result> = (Flowable<Command>) -> Flowable<Result>

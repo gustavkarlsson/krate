@@ -1,7 +1,5 @@
 package se.gustavkarlsson.krate.core
 
-import StateAwareTransformer
-import StateIgnoringTransformer
 import io.reactivex.Flowable
 
 internal class CompositeTransformer<State, Command, Result>(
