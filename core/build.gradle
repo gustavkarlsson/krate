@@ -63,6 +63,8 @@ bintray {
         websiteUrl = "https://github.com/gustavkarlsson/krate"
         issueTrackerUrl = "https://github.com/gustavkarlsson/krate/issues"
         vcsUrl = "https://github.com/gustavkarlsson/krate.git"
+        githubRepo = "gustavkarlsson/krate"
+        githubReleaseNotesFile = "CHANGELOG.md"
         version {
             name = project.version
             released = new Date()
