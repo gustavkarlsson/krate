@@ -1,12 +1,72 @@
 apply plugin: "java-library"
 apply plugin: "maven-publish"
 apply plugin: "jacoco"
+apply plugin: "org.jetbrains.dokka"
+apply plugin: "com.jfrog.bintray"
+
+sourceCompatibility = "1.6"
+targetCompatibility = "1.6"
+
+dokka {
+    outputFormat = "javadoc"
+    outputDirectory = javadoc.destinationDir
+}
+
+def pomConfig = {
+    licenses {
+        license {
+            name "MIT License"
+            url "https://opensource.org/licenses/MIT"
+            distribution "repo"
+        }
+    }
+    developers {
+        developer {
+            id "gustavkarlsson"
+            name "Gustav Karlsson"
+            email "gustav.karlsson@gmail.com"
+        }
+    }
+
+    scm {
+        url "https://github.com/gustavkarlsson/krate"
+    }
+}
 
 publishing {
     publications {
         maven(MavenPublication) {
             from components.java
             artifact sourcesJar
+            artifact javadocJar
+            artifactId = "krate-core"
+            pom.withXml {
+                def root = asNode()
+                root.appendNode("description", "Predictable state container for Kotlin and RxJava")
+                root.appendNode("name", "Krate Core")
+                root.appendNode("url", "https://github.com/gustavkarlsson/krate")
+                root.children().last() + pomConfig
+            }
+        }
+    }
+}
+
+bintray {
+    user = project.hasProperty("bintrayUser") ? project.property("bintrayUser") : System.getenv("BINTRAY_USER")
+    key = project.hasProperty("bintrayApiKey") ? project.property("bintrayApiKey") : System.getenv("BINTRAY_API_KEY")
+    publications = ["maven"]
+    pkg {
+        repo = "maven"
+        name = "krate-core"
+        licenses = ["MIT"]
+        labels = ["kotlin", "rxjava2", "reactive", "state", "functional", "dsl"]
+        websiteUrl = "https://github.com/gustavkarlsson/krate"
+        issueTrackerUrl = "https://github.com/gustavkarlsson/krate/issues"
+        vcsUrl = "https://github.com/gustavkarlsson/krate.git"
+        version {
+            name = project.version
+            released = new Date()
+            vcsTag = project.version
         }
     }
 }
@@ -26,13 +86,27 @@ dependencies {
     // Test
     testImplementation "junit:junit:$junit_version"
     testImplementation "org.mockito:mockito-core:$mockito_version"
-    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockito_kotlin_version", { exclude group: "org.jetbrains.kotlin" }
-    testImplementation "com.willowtreeapps.assertk:assertk:$assertk_version", { exclude group: "org.jetbrains.kotlin" }
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockito_kotlin_version", {
+        exclude group: "org.jetbrains.kotlin"
+    }
+    testImplementation "com.willowtreeapps.assertk:assertk:$assertk_version", {
+        exclude group: "org.jetbrains.kotlin"
+    }
 }
 
-task sourcesJar(type: Jar) {
+task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = "sources"
     from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: dokka) {
+    classifier = "javadoc"
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
 }
 
 check.dependsOn jacocoTestReport

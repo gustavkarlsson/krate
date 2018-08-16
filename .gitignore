@@ -1,7 +1,8 @@
 ### IntelliJ ###
 /.idea/
+out/
 
 ### Gradle ###
 .gradle
+local.properties
 build/
-out/
