@@ -1,14 +1,17 @@
 package se.gustavkarlsson.krate.core.dsl
 
 import Interceptor
-import StateIgnoringTransformer
 import StateAwareTransformer
+import StateIgnoringTransformer
 import Watcher
 import se.gustavkarlsson.krate.core.Transformer
 import se.gustavkarlsson.krate.core.TypedTransformer
 import se.gustavkarlsson.krate.core.TypedWatcher
 import se.gustavkarlsson.krate.core.WatchingInterceptor
 
+/**
+ * A configuration block for commands.
+ */
 @StoreDsl
 class Commands<State : Any, Command : Any, Result : Any>
 internal constructor() {

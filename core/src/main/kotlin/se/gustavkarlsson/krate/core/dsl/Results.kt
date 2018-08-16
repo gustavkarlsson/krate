@@ -7,6 +7,9 @@ import se.gustavkarlsson.krate.core.TypedReducer
 import se.gustavkarlsson.krate.core.TypedWatcher
 import se.gustavkarlsson.krate.core.WatchingInterceptor
 
+/**
+ * A configuration block for results.
+ */
 @StoreDsl
 class Results<State : Any, Result : Any>
 internal constructor() {

@@ -5,7 +5,7 @@ import StateIgnoringTransformer
 import io.reactivex.Flowable
 
 /**
- * A transformer that does not have access to state
+ * A transformer that does not have access to the state.
  */
 class Transformer<Command : Any, Result : Any>(
     private val transform: StateIgnoringTransformer<Command, Result>
