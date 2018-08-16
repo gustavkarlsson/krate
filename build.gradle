@@ -30,6 +30,12 @@ buildscript {
 
 apply plugin: "pl.allegro.tech.build.axion-release"
 
+scmVersion {
+    tag {
+        prefix = ""
+    }
+}
+
 allprojects {
     repositories {
         jcenter()
