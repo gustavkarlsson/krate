@@ -1,6 +1,5 @@
 package se.gustavkarlsson.krate.core
 
-import Reducer
 import assertk.assert
 import assertk.assertions.isEqualTo
 import com.nhaarman.mockitokotlin2.any

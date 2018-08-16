@@ -1,7 +1,5 @@
 package se.gustavkarlsson.krate.core
 
-import Interceptor
-import Watcher
 import io.reactivex.Flowable
 
 internal class WatchingInterceptor<T>(private val watcher: Watcher<T>) : Interceptor<T> {

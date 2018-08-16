@@ -1,8 +1,8 @@
 package se.gustavkarlsson.krate.core.dsl
 
-import Interceptor
-import Watcher
 import io.reactivex.Scheduler
+import se.gustavkarlsson.krate.core.Interceptor
+import se.gustavkarlsson.krate.core.Watcher
 import se.gustavkarlsson.krate.core.WatchingInterceptor
 
 /**
