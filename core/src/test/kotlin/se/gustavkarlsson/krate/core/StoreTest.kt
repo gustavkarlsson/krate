@@ -1,8 +1,5 @@
 package se.gustavkarlsson.krate.core
 
-import Interceptor
-import Reducer
-import StateAwareTransformer
 import assertk.assert
 import assertk.assertions.isEqualTo
 import com.nhaarman.mockitokotlin2.any

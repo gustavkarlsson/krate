@@ -3,18 +3,18 @@ buildscript {
         // Misc
         kotlin_version = "1.2.60"
         release_plugin_version = "1.9.2"
+        bintray_version = "1.8.4"
+        ktlint_version = "0.24.0"
+        dokka_version = "0.9.17"
 
         // Implementation
-        rxjava_version = "2.1.17"
+        rxjava_version = "2.2.0"
 
         // Test
         junit_version = "4.12"
         assertk_version = "0.10"
         mockito_version = "2.19.0"
         mockito_kotlin_version = "2.0.0-RC1"
-
-        // Other
-        ktlint_version = "0.24.0"
     }
     repositories {
         jcenter()
@@ -23,10 +23,18 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "pl.allegro.tech.build:axion-release-plugin:$release_plugin_version"
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:$bintray_version"
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:$dokka_version"
     }
 }
 
 apply plugin: "pl.allegro.tech.build.axion-release"
+
+scmVersion {
+    tag {
+        prefix = ""
+    }
+}
 
 allprojects {
     repositories {
@@ -40,8 +48,6 @@ subprojects {
 
     group = "se.gustavkarlsson.krate"
     version = scmVersion.version
-    sourceCompatibility = "1.6"
-    targetCompatibility = "1.6"
 }
 
 scmVersion {

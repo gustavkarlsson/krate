@@ -1,6 +1,5 @@
 package se.gustavkarlsson.krate.core
 
-import StateAwareTransformer
 import io.reactivex.Flowable
 import kotlin.reflect.KClass
 

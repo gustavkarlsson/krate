@@ -1,10 +1,9 @@
 package se.gustavkarlsson.krate.core
 
-import Reducer
 import kotlin.reflect.KClass
 
 /**
- * A reducers that filters results of a specified type and applies another reducer for that type to it.
+ * A reducer that filters results of a specified type and applies another reducer for that type to it.
  */
 class TypedReducer<State : Any, Result : Any, R : Result>(
     private val type: KClass<R>,

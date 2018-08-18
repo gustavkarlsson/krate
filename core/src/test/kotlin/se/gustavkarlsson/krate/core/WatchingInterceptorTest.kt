@@ -1,6 +1,5 @@
 package se.gustavkarlsson.krate.core
 
-import Watcher
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import io.reactivex.Flowable

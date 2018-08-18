@@ -1,12 +1,15 @@
 package se.gustavkarlsson.krate.core.dsl
 
-import Interceptor
-import Reducer
-import Watcher
+import se.gustavkarlsson.krate.core.Interceptor
+import se.gustavkarlsson.krate.core.Reducer
 import se.gustavkarlsson.krate.core.TypedReducer
 import se.gustavkarlsson.krate.core.TypedWatcher
+import se.gustavkarlsson.krate.core.Watcher
 import se.gustavkarlsson.krate.core.WatchingInterceptor
 
+/**
+ * A configuration block for results.
+ */
 @StoreDsl
 class Results<State : Any, Result : Any>
 internal constructor() {

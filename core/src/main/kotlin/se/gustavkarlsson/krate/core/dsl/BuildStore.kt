@@ -3,7 +3,7 @@ package se.gustavkarlsson.krate.core.dsl
 import se.gustavkarlsson.krate.core.Store
 
 /**
- * Creates a store using the declarative DSL
+ * Creates a [Store] using the Krate DSL.
  */
 fun <State : Any, Command : Any, Result : Any> buildStore(
     block: StoreBuilder<State, Command, Result>.() -> Unit

@@ -1,17 +1,13 @@
 package se.gustavkarlsson.krate.core
 
-import Interceptor
-import Reducer
-import StateAwareTransformer
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
 import io.reactivex.Scheduler
 import io.reactivex.subjects.PublishSubject
 
 /**
- * Manages application (sub)state by accepting commands,
- * transforming them into any number of results,
- * which are then used to sequentially produce new state updates
+ * Manages state by accepting commands, transforming them into results,
+ * which are then used to sequentially produce new state updates.
  *
  * @param State The type representing the state of the store
  * @param Command Commands are issued to produce results
@@ -36,7 +32,7 @@ internal constructor(
         private set
 
     /**
-     * Issue a command to the store for processing
+     * Issues a command to the store for processing
      *
      * @param command the command to issue
      */
@@ -79,13 +75,14 @@ internal constructor(
     }
 
     /**
-     * An stream of state updates produced by this store,
+     * A stream of state updates produced by this store,
      * starting with the current state
      *
      * State updates will be observed on the observe [Scheduler] if one was specified.
      *
      * *Note: All subscribers share a single upstream subscription,
      * so there is no need to use publishing operators such as [Flowable.publish].*
+     *
      * @return A stream of [State] updates
      */
     val states: Flowable<State> = internalStates

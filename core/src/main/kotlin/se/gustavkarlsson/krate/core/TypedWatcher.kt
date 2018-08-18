@@ -1,6 +1,5 @@
 package se.gustavkarlsson.krate.core
 
-import Watcher
 import kotlin.reflect.KClass
 
 /**
