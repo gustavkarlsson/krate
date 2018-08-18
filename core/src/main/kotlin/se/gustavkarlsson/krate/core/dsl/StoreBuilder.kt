@@ -13,11 +13,11 @@ import se.gustavkarlsson.krate.core.Store
 class StoreBuilder<State : Any, Command : Any, Result : Any>
 internal constructor() {
     private var initialState: State? = null
-    private val transformers = mutableListOf<StateAwareTransformer<State, Command, Result>>()
-    private val reducers = mutableListOf<Reducer<State, Result>>()
-    private val commandInterceptors = mutableListOf<Interceptor<Command>>()
-    private val resultInterceptors = mutableListOf<Interceptor<Result>>()
-    private val stateInterceptors = mutableListOf<Interceptor<State>>()
+    private var transformers = mutableListOf<StateAwareTransformer<State, Command, Result>>()
+    private var reducers = mutableListOf<Reducer<State, Result>>()
+    private var commandInterceptors = mutableListOf<Interceptor<Command>>()
+    private var resultInterceptors = mutableListOf<Interceptor<Result>>()
+    private var stateInterceptors = mutableListOf<Interceptor<State>>()
     private var observeScheduler: Scheduler? = null
 
     /**
@@ -31,8 +31,8 @@ internal constructor() {
         Commands<State, Command, Result>()
             .also(block)
             .let {
-                transformers += it.transformers
-                commandInterceptors += it.interceptors
+                transformers.addAll(it.transformers)
+                commandInterceptors.addAll(it.interceptors)
             }
     }
 
@@ -47,8 +47,8 @@ internal constructor() {
         Results<State, Result>()
             .also(block)
             .let {
-                reducers += it.reducers
-                resultInterceptors += it.interceptors
+                reducers.addAll(it.reducers)
+                resultInterceptors.addAll(it.interceptors)
             }
     }
 
@@ -65,8 +65,25 @@ internal constructor() {
             .let {
                 initialState = it.initial
                 observeScheduler = it.observeScheduler
-                stateInterceptors += it.interceptors
+                stateInterceptors.addAll(it.interceptors)
             }
+    }
+
+    /**
+     * Adds a plugin to the store
+     *
+     * @param plugin the plugin to add
+     */
+    fun plugin(plugin: StorePlugin<State, Command, Result>) {
+        plugin.run {
+            initialState = changeInitialState(initialState)
+            transformers = changeTransformers(transformers).toMutableList()
+            reducers = changeReducers(reducers).toMutableList()
+            commandInterceptors = changeCommandInterceptors(commandInterceptors).toMutableList()
+            resultInterceptors = changeResultInterceptors(resultInterceptors).toMutableList()
+            stateInterceptors = changeStateInterceptors(stateInterceptors).toMutableList()
+            observeScheduler = changeObserveScheduler(observeScheduler)
+        }
     }
 
     internal fun build(): Store<State, Command, Result> {

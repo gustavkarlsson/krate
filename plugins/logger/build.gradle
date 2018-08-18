@@ -1,0 +1,39 @@
+apply plugin: "java-library"
+apply plugin: "maven-publish"
+apply plugin: "jacoco"
+
+sourceCompatibility = "1.6"
+targetCompatibility = "1.6"
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+        }
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+}
+
+dependencies {
+    implementation project(":core")
+
+    // Test
+    testImplementation "junit:junit:$junit_version"
+    testImplementation "org.mockito:mockito-core:$mockito_version"
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockito_kotlin_version", { exclude group: "org.jetbrains.kotlin" }
+    testImplementation "com.willowtreeapps.assertk:assertk:$assertk_version", { exclude group: "org.jetbrains.kotlin" }
+}
+
+task sourcesJar(type: Jar) {
+    classifier = "sources"
+    from sourceSets.main.allSource
+}
+
+check.dependsOn jacocoTestReport
