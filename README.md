@@ -21,6 +21,7 @@ but also [Flux](https://facebook.github.io/flux/) and [Redux](https://redux.js.o
 - **Separation of concerns:** Clear distinction between *what* and *how*
 - **DSL:** The initial setup is done using a fully documented developer-friendly DSL
 - **Kotlin powered:** Utilizes advanced Kotlin features to provide a beautiful API
+- **Pluggable:** Functionality can be bundled into plugins and easily added to the project
 - **Great with Android:** Alleviates many annoying aspects of Android development
 
 
@@ -49,7 +50,7 @@ allprojects {
 
 ```groovy
 dependencies {
-    implementation 'com.github.gustavkarlsson:krate:<latest_version>'
+    implementation 'com.github.gustavkarlsson.krate:krate-core:<latest_version>'
 }
 ```
 
