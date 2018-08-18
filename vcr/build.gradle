@@ -2,6 +2,9 @@ apply plugin: "java-library"
 apply plugin: "maven-publish"
 apply plugin: "jacoco"
 
+sourceCompatibility = "1.6"
+targetCompatibility = "1.6"
+
 publishing {
     publications {
         maven(MavenPublication) {
@@ -20,7 +23,6 @@ jacocoTestReport {
 
 dependencies {
     implementation project(":core")
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     // Test
     testImplementation "junit:junit:$junit_version"

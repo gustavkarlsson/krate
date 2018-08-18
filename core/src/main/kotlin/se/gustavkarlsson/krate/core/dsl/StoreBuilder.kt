@@ -69,7 +69,7 @@ internal constructor() {
             }
     }
 
-    fun plugin(plugin: StorePlugin<State, Command, Result>) {
+    infix fun plugin(plugin: StorePlugin<State, Command, Result>) {
         plugin.run {
             initialState = changeInitialState(initialState)
             transformers = changeTransformers(transformers).toMutableList()

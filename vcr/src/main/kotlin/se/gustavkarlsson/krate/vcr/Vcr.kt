@@ -1,12 +1,12 @@
 package se.gustavkarlsson.krate.vcr
 
-import Interceptor
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
 import io.reactivex.Maybe
 import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
+import se.gustavkarlsson.krate.core.Interceptor
 import se.gustavkarlsson.krate.core.dsl.StorePlugin
 import java.util.concurrent.TimeUnit
 
