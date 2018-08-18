@@ -27,9 +27,14 @@ def pomConfig = {
             email "gustav.karlsson@gmail.com"
         }
     }
-
     scm {
-        url "https://github.com/gustavkarlsson/krate"
+        connection "scm:git:git@github.com:gustavkarlsson/krate.git"
+        developerConnection "scm:git:git@github.com:gustavkarlsson/krate.git"
+        url "scm:git:git@github.com:gustavkarlsson/krate.git"
+    }
+    issueManagement {
+        system "github"
+        url "https://github.com/gustavkarlsson/krate/issues"
     }
 }
 
@@ -59,16 +64,9 @@ bintray {
         repo = "maven"
         name = "krate-core"
         licenses = ["MIT"]
-        labels = ["kotlin", "rxjava2", "reactive", "state", "functional", "dsl"]
-        websiteUrl = "https://github.com/gustavkarlsson/krate"
-        issueTrackerUrl = "https://github.com/gustavkarlsson/krate/issues"
         vcsUrl = "https://github.com/gustavkarlsson/krate.git"
-        githubRepo = "gustavkarlsson/krate"
-        githubReleaseNotesFile = "CHANGELOG.md"
         version {
             name = project.version
-            released = new Date()
-            vcsTag = project.version
         }
     }
 }
@@ -82,7 +80,7 @@ jacocoTestReport {
 
 dependencies {
     // Main
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    api "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     api "io.reactivex.rxjava2:rxjava:$rxjava_version"
 
     // Test

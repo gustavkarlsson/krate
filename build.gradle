@@ -8,7 +8,7 @@ buildscript {
         dokka_version = "0.9.17"
 
         // Implementation
-        rxjava_version = "2.1.17"
+        rxjava_version = "2.2.0"
 
         // Test
         junit_version = "4.12"
