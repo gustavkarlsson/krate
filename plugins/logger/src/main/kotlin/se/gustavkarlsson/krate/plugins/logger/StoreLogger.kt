@@ -10,26 +10,22 @@ class StoreLogger<State : Any, Command : Any, Result : Any>(
 ) : StorePlugin<State, Command, Result> {
 
     override fun changeCommandInterceptors(interceptors: List<Interceptor<Command>>): List<Interceptor<Command>> {
-        return if (commandLogger == null) {
-            interceptors
-        } else {
-            interceptors + { it.doOnNext(commandLogger) }
-        }
+        return interceptors.appendIfNotNull(commandLogger)
     }
 
     override fun changeResultInterceptors(interceptors: List<Interceptor<Result>>): List<Interceptor<Result>> {
-        return if (resultLogger == null) {
-            interceptors
-        } else {
-            interceptors + { it.doOnNext(resultLogger) }
-        }
+        return interceptors.appendIfNotNull(resultLogger)
     }
 
     override fun changeStateInterceptors(interceptors: List<Interceptor<State>>): List<Interceptor<State>> {
-        return if (stateLogger == null) {
-            interceptors
+        return interceptors.appendIfNotNull(stateLogger)
+    }
+
+    private fun <T> List<Interceptor<T>>.appendIfNotNull(consumer: ((T) -> Unit)?): List<Interceptor<T>> {
+        return if (consumer == null) {
+            this
         } else {
-            interceptors + { it.doOnNext(stateLogger) }
+            this + { it.doOnNext(consumer) }
         }
     }
 }
