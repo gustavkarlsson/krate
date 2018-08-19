@@ -24,12 +24,109 @@ but also [Flux](https://facebook.github.io/flux/) and [Redux](https://redux.js.o
 - **Pluggable:** Functionality can be bundled into plugins and easily added to the project
 - **Great with Android:** Alleviates many annoying aspects of Android development
 
+## Minimal example
+
+Here is minimal working example that demonstrates the very basics of Krate:
+
+```kotlin
+import io.reactivex.Single
+import se.gustavkarlsson.krate.core.dsl.buildStore
+import java.util.Random
+import java.util.concurrent.TimeUnit
+
+// Define an immutable state class
+data class State(val weather: String? = null)
+
+// Define commands as a sealed class hierarchy
+sealed class Command
+object GetWeather : Command()
+
+// Define results as a sealed class hierarchy
+sealed class Result
+data class WeatherReport(val weather: String) : Result()
+
+// Fake async API for demonstration purposes
+object WeatherApi {
+    private val random = Random()
+
+    fun getWeather(): Single<String> {
+        return Single.fromCallable(::fakeWeather)
+            .delay(2, TimeUnit.SECONDS)
+    }
+
+    private fun fakeWeather(): String {
+        val temperature = random.nextInt(35)
+        val condition = if (random.nextBoolean()) "clear" else "raining"
+        return "It's $temperature° and $condition"
+    }
+}
+
+// Create a store with type parameters
+val store = buildStore<State, Command, Result> {
+
+    states {
+        initial = State() // An initial state must be set
+    }
+
+    commands {
+        // Transform GetWeather commands to results
+        transform<GetWeather> { commands ->
+            commands
+                .flatMapSingle {
+                    WeatherApi.getWeather()  // Call API for each GetWeather command
+                        .map<Result> { weather ->
+                            WeatherReport(weather) // Map API response to Result
+                        }
+                }
+        }
+
+        watch<GetWeather> { println("GetWeather") } // Log GetWeather commands
+    }
+
+    results {
+        // Update state whenever a WeatherReport arrives
+        reduce<WeatherReport> { state, report ->
+            state.copy(weather = report.weather)
+        }
+    }
+}
+
+fun main(args: Array<String>) {
+
+    // Observe the store for state changes
+    store.states.subscribe {
+        // Typically the state would be rendered here
+        println("$it")
+    }
+
+    // Fake some user interactions
+    store.issue(GetWeather)
+    Thread.sleep(1000)
+    store.issue(GetWeather)
+    Thread.sleep(2000)
+    store.issue(GetWeather)
+
+    Thread.sleep(10000)
+}
+```
+
+Outputs:
+
+```
+State(weather=null)
+GetWeather
+GetWeather
+State(weather=It's 11° C and raining)
+GetWeather
+State(weather=It's 21° C and clear)
+State(weather=It's 32° C and raining)
+```
 
 ## Learn more
-Check out the [wiki](https://github.com/gustavkarlsson/krate/wiki) for documentation and simple examples.
+
+Check out the [wiki](https://github.com/gustavkarlsson/krate/wiki) for documentation.
 
 You can also check out one of the provided sample projects.
-
 
 ## Download
 
