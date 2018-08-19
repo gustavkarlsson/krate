@@ -3,7 +3,6 @@ buildscript {
         // Misc
         kotlin_version = "1.2.60"
         release_plugin_version = "1.9.2"
-        bintray_version = "1.8.4"
         ktlint_version = "0.24.0"
         dokka_version = "0.9.17"
 
@@ -23,7 +22,6 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "pl.allegro.tech.build:axion-release-plugin:$release_plugin_version"
-        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:$bintray_version"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:$dokka_version"
     }
 }
