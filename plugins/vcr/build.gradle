@@ -1,15 +1,23 @@
 apply plugin: "java-library"
 apply plugin: "maven-publish"
 apply plugin: "jacoco"
+apply plugin: "org.jetbrains.dokka"
 
 sourceCompatibility = "1.6"
 targetCompatibility = "1.6"
+
+dokka {
+    outputFormat = "javadoc"
+    outputDirectory = javadoc.destinationDir
+}
 
 publishing {
     publications {
         maven(MavenPublication) {
             from components.java
             artifact sourcesJar
+            artifact javadocJar
+            artifactId = "krate-vcr"
         }
     }
 }
@@ -27,13 +35,27 @@ dependencies {
     // Test
     testImplementation "junit:junit:$junit_version"
     testImplementation "org.mockito:mockito-core:$mockito_version"
-    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockito_kotlin_version", { exclude group: "org.jetbrains.kotlin" }
-    testImplementation "com.willowtreeapps.assertk:assertk:$assertk_version", { exclude group: "org.jetbrains.kotlin" }
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockito_kotlin_version", {
+        exclude group: "org.jetbrains.kotlin"
+    }
+    testImplementation "com.willowtreeapps.assertk:assertk:$assertk_version", {
+        exclude group: "org.jetbrains.kotlin"
+    }
 }
 
-task sourcesJar(type: Jar) {
+task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = "sources"
     from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: dokka) {
+    classifier = "javadoc"
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
 }
 
 check.dependsOn jacocoTestReport
