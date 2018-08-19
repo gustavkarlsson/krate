@@ -20,7 +20,8 @@ import se.gustavkarlsson.krate.core.Watcher
 
 class StoreBuilderTest {
 
-    private val mockState = mock<NotesState>()
+    private val mockInitialState = mock<NotesState>()
+    private val mockStateAfterPlugin = mock<NotesState>()
     private val mockTransformer = mock<StateAwareTransformer<NotesState, NotesCommand, NotesResult>>()
     private val mockTypedTransformer = mock<StateAwareTransformer<NotesState, CreateNote, NotesResult>>()
     private val mockReducer = mock<Reducer<NotesState, NotesResult>>()
@@ -46,13 +47,42 @@ class StoreBuilderTest {
     private val mockTypedResultWatcher = mock<Watcher<NoteCreated>>()
     private val mockStateWatcher = mock<Watcher<NotesState>>()
     private val mockObserveScheduler = mock<Scheduler>()
+    private val mockObserveSchedulerAfterPlugin = mock<Scheduler>()
+    private val mockPlugin = mock<StorePlugin<NotesState, NotesCommand, NotesResult>> {
+        on(it.changeInitialState(any())).thenAnswer {
+            mockStateAfterPlugin
+        }
+        on(it.changeTransformers(any())).thenAnswer {
+            val transformers = it.arguments[0] as List<StateAwareTransformer<NotesState, NotesCommand, NotesResult>>
+            transformers + mockTransformer
+        }
+        on(it.changeReducers(any())).thenAnswer {
+            val reducers = it.arguments[0] as List<Reducer<NotesState, NotesResult>>
+            reducers + mockReducer
+        }
+        on(it.changeCommandInterceptors(any())).thenAnswer {
+            val interceptors = it.arguments[0] as List<Interceptor<NotesCommand>>
+            interceptors + { it }
+        }
+        on(it.changeResultInterceptors(any())).thenAnswer {
+            val interceptors = it.arguments[0] as List<Interceptor<NotesResult>>
+            interceptors + { it }
+        }
+        on(it.changeStateInterceptors(any())).thenAnswer {
+            val interceptors = it.arguments[0] as List<Interceptor<NotesState>>
+            interceptors + { it }
+        }
+        on(it.changeObserveScheduler(any())).thenAnswer {
+            mockObserveSchedulerAfterPlugin
+        }
+    }
 
     @Test
     fun `build full includes all added objects`() {
         val store = StoreBuilder<NotesState, NotesCommand, NotesResult>()
             .apply {
                 states {
-                    initial = mockState
+                    initial = mockInitialState
                     watchAll(mockStateWatcher)
                     intercept(mockStateInterceptor)
                     observeScheduler = mockObserveScheduler
@@ -71,20 +101,23 @@ class StoreBuilderTest {
                     intercept(mockResultInterceptor)
                     watch(mockTypedResultWatcher)
                 }
+                plugin(mockPlugin)
             }
             .build()
 
         store.run {
             assertAll {
-                assert(currentState).isEqualTo(mockState)
-                assert(transformers).hasSize(2)
+                assert(currentState).isEqualTo(mockStateAfterPlugin)
+                assert(transformers).hasSize(3)
                 assert(transformers[0]).isEqualTo(mockTransformer)
-                assert(reducers).hasSize(2)
+                assert(transformers[2]).isEqualTo(mockTransformer)
+                assert(reducers).hasSize(3)
                 assert(reducers[0]).isEqualTo(mockReducer)
-                assert(commandInterceptors).hasSize(3)
-                assert(resultInterceptors).hasSize(3)
-                assert(stateInterceptors).hasSize(2)
-                assert(observeScheduler).isEqualTo(mockObserveScheduler)
+                assert(reducers[2]).isEqualTo(mockReducer)
+                assert(commandInterceptors).hasSize(4)
+                assert(resultInterceptors).hasSize(4)
+                assert(stateInterceptors).hasSize(3)
+                assert(observeScheduler).isEqualTo(mockObserveSchedulerAfterPlugin)
             }
         }
     }
@@ -94,7 +127,7 @@ class StoreBuilderTest {
         val builder = StoreBuilder<NotesState, NotesCommand, NotesResult>()
             .apply {
                 states {
-                    initial = mockState
+                    initial = mockInitialState
                 }
                 commands {
                     transformAllWithState(mockTransformer)
@@ -127,7 +160,7 @@ class StoreBuilderTest {
         val builder = StoreBuilder<NotesState, NotesCommand, NotesResult>()
             .apply {
                 states {
-                    initial = mockState
+                    initial = mockInitialState
                 }
                 results {
                     reduceAll(mockReducer)
@@ -142,7 +175,7 @@ class StoreBuilderTest {
         val builder = StoreBuilder<NotesState, NotesCommand, NotesResult>()
             .apply {
                 states {
-                    initial = mockState
+                    initial = mockInitialState
                 }
                 commands {
                     transformAllWithState(mockTransformer)
