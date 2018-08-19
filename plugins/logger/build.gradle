@@ -17,7 +17,7 @@ publishing {
             from components.java
             artifact sourcesJar
             artifact javadocJar
-            artifactId = "krate-core"
+            artifactId = "krate-logger"
         }
     }
 }
@@ -30,9 +30,7 @@ jacocoTestReport {
 }
 
 dependencies {
-    // Main
-    api "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    api "io.reactivex.rxjava2:rxjava:$rxjava_version"
+    implementation project(":core")
 
     // Test
     testImplementation "junit:junit:$junit_version"

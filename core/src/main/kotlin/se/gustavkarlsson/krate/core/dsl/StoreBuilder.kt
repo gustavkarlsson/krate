@@ -69,7 +69,12 @@ internal constructor() {
             }
     }
 
-    infix fun plugin(plugin: StorePlugin<State, Command, Result>) {
+    /**
+     * Adds a plugin to the store
+     *
+     * @param plugin the plugin to add
+     */
+    fun plugin(plugin: StorePlugin<State, Command, Result>) {
         plugin.run {
             initialState = changeInitialState(initialState)
             transformers = changeTransformers(transformers).toMutableList()
