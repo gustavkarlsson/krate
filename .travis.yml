@@ -13,3 +13,7 @@ cache:
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+
+install: ./gradlew assemble -x :samples:android:assemble
+
+script: ./gradlew check -x :samples:android:check
