@@ -1,4 +1,5 @@
 include ":core"
 include ":plugins:logger"
+include ":samples:android"
 include ":samples:lanterna"
 include ":samples:tornadofx"

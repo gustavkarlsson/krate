@@ -5,6 +5,7 @@ buildscript {
         release_plugin_version = "1.9.2"
         ktlint_version = "0.24.0"
         dokka_version = "0.9.17"
+        android_gradle_version = "3.2.0-rc02"
 
         // Implementation
         rxjava_version = "2.2.0"
@@ -18,11 +19,13 @@ buildscript {
     repositories {
         jcenter()
         mavenCentral()
+        google()
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "pl.allegro.tech.build:axion-release-plugin:$release_plugin_version"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:$dokka_version"
+        classpath "com.android.tools.build:gradle:$android_gradle_version"
     }
 }
 
@@ -38,12 +41,11 @@ allprojects {
     repositories {
         jcenter()
         mavenCentral()
+        google()
     }
 }
 
 subprojects {
-    apply plugin: "kotlin"
-
     group = "se.gustavkarlsson.krate"
     version = scmVersion.version
 }
