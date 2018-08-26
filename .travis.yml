@@ -4,6 +4,7 @@ jdk:
   - oraclejdk8
 
 before_install:
+  - echo "Removing Android projects"
   - sed -i '/.*android.*/d' settings.gradle
 
 before_cache:
