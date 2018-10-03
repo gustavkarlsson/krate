@@ -3,6 +3,7 @@ package se.gustavkarlsson.krate.core
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
 import io.reactivex.Scheduler
+import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.PublishSubject
 
 /**
@@ -22,7 +23,7 @@ internal constructor(
     internal val resultInterceptors: List<Interceptor<Result>>,
     internal val stateInterceptors: List<Interceptor<State>>,
     internal val observeScheduler: Scheduler?
-) {
+) : Disposable {
 
     /**
      * The current state of the store
@@ -95,6 +96,14 @@ internal constructor(
     }
 
     internal fun subscribeInternal() {
-        internalStates.subscribe()
+        disposable = internalStates.subscribe()
     }
+
+    private var disposable: Disposable? = null
+
+    override fun dispose() {
+        disposable?.dispose()
+    }
+
+    override fun isDisposed() = disposable?.isDisposed ?: false
 }
