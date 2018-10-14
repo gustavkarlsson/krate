@@ -2,6 +2,8 @@ package se.gustavkarlsson.krate.core
 
 import assertk.assert
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
+import assertk.assertions.isTrue
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
@@ -201,11 +203,41 @@ class StoreTest {
     }
 
     @Test
-    fun `commands issued after dispose() are ignored`() {
+    fun `isDisposed is initially false`() {
+        val result = impl.isDisposed
+
+        assert(result).isFalse()
+    }
+
+    @Test
+    fun `isDisposed is true after disposing`() {
         impl.dispose()
+
+        val result = impl.isDisposed
+
+        assert(result).isTrue()
+    }
+
+    @Test
+    fun `dispose() can be called twice`() {
+        impl.dispose()
+        impl.dispose()
+    }
+
+    @Test
+    fun `commands issued after dispose() are ignored, even if subscribed`() {
+        impl.states.subscribe()
+        impl.dispose()
+
         impl.issue(CreateNote(text))
         val result = impl.currentState
 
         assert(result).isEqualTo(initialState)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun `running subscribeInternal() twice throws exception`() {
+        impl.subscribeInternal()
+        impl.dispose()
     }
 }

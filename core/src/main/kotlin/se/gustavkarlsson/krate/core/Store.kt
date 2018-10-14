@@ -3,6 +3,7 @@ package se.gustavkarlsson.krate.core
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
 import io.reactivex.Scheduler
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.PublishSubject
 
@@ -52,7 +53,6 @@ internal constructor(
         .onBackpressureLatest()
         .setCurrentState()
         .replay(1)
-        .refCount()
 
     private fun <T> Flowable<T>.intercept(interceptors: List<Interceptor<T>>): Flowable<T> {
         return interceptors.fold(this) { stream, intercept ->
@@ -96,7 +96,8 @@ internal constructor(
     }
 
     internal fun subscribeInternal() {
-        disposable = internalStates.subscribe()
+        check(disposable == null) { "Cannot subscribe twice" }
+        disposable = CompositeDisposable(internalStates.subscribe(), internalStates.connect())
     }
 
     private var disposable: Disposable? = null
