@@ -129,12 +129,6 @@ class StoreBuilderTest {
                 states {
                     initial = mockInitialState
                 }
-                commands {
-                    transformAllWithState(mockTransformer)
-                }
-                results {
-                    reduceAll(mockReducer)
-                }
             }
 
         builder.build()
@@ -143,44 +137,6 @@ class StoreBuilderTest {
     @Test(expected = IllegalStateException::class)
     fun `build without initial state throws exception`() {
         val builder = StoreBuilder<NotesState, NotesCommand, NotesResult>()
-            .apply {
-                commands {
-                    transformAllWithState(mockTransformer)
-                }
-                results {
-                    reduceAll(mockReducer)
-                }
-            }
-
-        builder.build()
-    }
-
-    @Test(expected = IllegalStateException::class)
-    fun `build without transformer throws exception`() {
-        val builder = StoreBuilder<NotesState, NotesCommand, NotesResult>()
-            .apply {
-                states {
-                    initial = mockInitialState
-                }
-                results {
-                    reduceAll(mockReducer)
-                }
-            }
-
-        builder.build()
-    }
-
-    @Test(expected = IllegalStateException::class)
-    fun `build without reducer throws exception`() {
-        val builder = StoreBuilder<NotesState, NotesCommand, NotesResult>()
-            .apply {
-                states {
-                    initial = mockInitialState
-                }
-                commands {
-                    transformAllWithState(mockTransformer)
-                }
-            }
 
         builder.build()
     }
