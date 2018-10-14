@@ -114,7 +114,6 @@ class StoreTest {
 
     @Test
     fun `currentState after processing chain has latest state`() {
-        impl.subscribeInternal()
         impl.issue(CreateNote(text))
 
         val result = impl.currentState
@@ -124,8 +123,6 @@ class StoreTest {
 
     @Test
     fun `subscribe before any command gets initial state`() {
-        impl.subscribeInternal()
-
         val observer = impl.states.test()
         testScheduler.triggerActions()
 
@@ -134,8 +131,6 @@ class StoreTest {
 
     @Test
     fun `second subscribe before any command also gets initial state`() {
-        impl.subscribeInternal()
-
         impl.states.subscribe()
         val observer = impl.states.test()
         testScheduler.triggerActions()
@@ -145,7 +140,6 @@ class StoreTest {
 
     @Test
     fun `subscribe after processing chain gets latest state`() {
-        impl.subscribeInternal()
         impl.issue(CreateNote(text))
 
         val observer = impl.states.test()
@@ -156,7 +150,6 @@ class StoreTest {
 
     @Test
     fun `command interceptors are called in order`() {
-        impl.subscribeInternal()
         val note = CreateNote(text)
 
         impl.issue(note)
@@ -169,8 +162,6 @@ class StoreTest {
 
     @Test
     fun `transformers are called in order`() {
-        impl.subscribeInternal()
-
         inOrder(mockTransformer1, mockTransformer2) {
             verify(mockTransformer1).invoke(any(), any())
             verify(mockTransformer2).invoke(any(), any())
@@ -179,8 +170,6 @@ class StoreTest {
 
     @Test
     fun `result interceptors are called in order`() {
-        impl.subscribeInternal()
-
         impl.issue(CreateNote(text))
 
         inOrder(mockResultInterceptor1, mockResultInterceptor2) {
@@ -191,7 +180,6 @@ class StoreTest {
 
     @Test
     fun `reducers are called in order`() {
-        impl.subscribeInternal()
         val text = text
 
         impl.issue(CreateNote(text))
@@ -204,13 +192,20 @@ class StoreTest {
 
     @Test
     fun `state interceptors are called in order`() {
-        impl.subscribeInternal()
-
         impl.issue(CreateNote(text))
 
         inOrder(mockStateInterceptor1, mockStateInterceptor2) {
             verify(mockStateInterceptor1).invoke(any())
             verify(mockStateInterceptor2).invoke(any())
         }
+    }
+
+    @Test
+    fun `commands issued after dispose() are ignored`() {
+        impl.dispose()
+        impl.issue(CreateNote(text))
+        val result = impl.currentState
+
+        assert(result).isEqualTo(initialState)
     }
 }

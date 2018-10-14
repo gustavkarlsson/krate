@@ -52,7 +52,7 @@ internal constructor(
         .onBackpressureLatest()
         .setCurrentState()
         .replay(1)
-        .autoConnect()
+        .refCount()
 
     private fun <T> Flowable<T>.intercept(interceptors: List<Interceptor<T>>): Flowable<T> {
         return interceptors.fold(this) { stream, intercept ->
