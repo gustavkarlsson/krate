@@ -15,8 +15,8 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     buildTypes {
         release {
@@ -31,24 +31,23 @@ android {
 dependencies {
     implementation project(":core")
     // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     // Support
-    implementation "androidx.appcompat:appcompat:1.0.0-rc01"
+    implementation "androidx.appcompat:appcompat:1.0.0"
     implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha2"
-    implementation "com.google.android.material:material:1.0.0-rc01"
+    implementation "com.google.android.material:material:1.0.0"
 
     // Navigation
-    implementation "android.arch.navigation:navigation-fragment-ktx:1.0.0-alpha05"
-    implementation "android.arch.navigation:navigation-ui-ktx:1.0.0-alpha05"
+    implementation "android.arch.navigation:navigation-fragment-ktx:1.0.0-alpha06"
+    implementation "android.arch.navigation:navigation-ui-ktx:1.0.0-alpha06"
 
     // Room
-    implementation "androidx.room:room-runtime:2.0.0-rc01"
-    implementation "androidx.room:room-rxjava2:2.0.0-rc01"
-    kapt "androidx.room:room-compiler:2.0.0-rc01"
+    implementation "androidx.room:room-runtime:2.0.0"
+    implementation "androidx.room:room-rxjava2:2.0.0"
+    kapt "androidx.room:room-compiler:2.0.0"
 
     // Other
-    implementation "io.reactivex.rxjava2:rxandroid:2.0.2"
-    implementation "com.jakewharton.rxbinding2:rxbinding-kotlin:2.1.1"
-    implementation "org.koin:koin-android:1.0.0-beta-6"
+    implementation "com.jakewharton.rxbinding2:rxbinding-kotlin:2.2.0"
+    implementation "org.koin:koin-android:1.0.1"
 }
