@@ -3,6 +3,8 @@ package se.gustavkarlsson.krate.core
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
 import io.reactivex.Scheduler
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.PublishSubject
 
 /**
@@ -22,7 +24,7 @@ internal constructor(
     internal val resultInterceptors: List<Interceptor<Result>>,
     internal val stateInterceptors: List<Interceptor<State>>,
     internal val observeScheduler: Scheduler?
-) {
+) : Disposable {
 
     /**
      * The current state of the store
@@ -51,7 +53,6 @@ internal constructor(
         .onBackpressureLatest()
         .setCurrentState()
         .replay(1)
-        .autoConnect()
 
     private fun <T> Flowable<T>.intercept(interceptors: List<Interceptor<T>>): Flowable<T> {
         return interceptors.fold(this) { stream, intercept ->
@@ -94,7 +95,11 @@ internal constructor(
         } ?: this
     }
 
-    internal fun subscribeInternal() {
-        internalStates.subscribe()
+    private val disposable: Disposable = CompositeDisposable(internalStates.subscribe(), internalStates.connect())
+
+    override fun dispose() {
+        disposable.dispose()
     }
+
+    override fun isDisposed() = disposable.isDisposed
 }
