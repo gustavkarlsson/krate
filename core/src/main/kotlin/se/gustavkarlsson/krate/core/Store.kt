@@ -95,16 +95,11 @@ internal constructor(
         } ?: this
     }
 
-    internal fun subscribeInternal() {
-        check(disposable == null) { "Cannot subscribe twice" }
-        disposable = CompositeDisposable(internalStates.subscribe(), internalStates.connect())
-    }
-
-    private var disposable: Disposable? = null
+    private val disposable: Disposable = CompositeDisposable(internalStates.subscribe(), internalStates.connect())
 
     override fun dispose() {
-        disposable?.dispose()
+        disposable.dispose()
     }
 
-    override fun isDisposed() = disposable?.isDisposed ?: false
+    override fun isDisposed() = disposable.isDisposed
 }

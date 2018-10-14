@@ -9,7 +9,6 @@ import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import io.reactivex.Flowable
 import io.reactivex.schedulers.TestScheduler
-import org.junit.Before
 import org.junit.Test
 
 class StoreTest {
@@ -101,11 +100,6 @@ class StoreTest {
         listOf(mockStateInterceptor1, mockStateInterceptor2),
         testScheduler
     )
-
-    @Before
-    fun setUp() {
-        impl.subscribeInternal()
-    }
 
     @Test
     fun `currentState before any command has initialState`() {
@@ -233,11 +227,5 @@ class StoreTest {
         val result = impl.currentState
 
         assert(result).isEqualTo(initialState)
-    }
-
-    @Test(expected = IllegalStateException::class)
-    fun `running subscribeInternal() twice throws exception`() {
-        impl.subscribeInternal()
-        impl.dispose()
     }
 }
