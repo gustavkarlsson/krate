@@ -90,12 +90,6 @@ internal constructor() {
         val initialState = checkNotNull(initialState) {
             "No initial state set. Set the initial state in a states-block in the DSL"
         }
-        check(!transformers.isEmpty()) {
-            "No transformers defined. Add transformers in a commands-block in the DSL"
-        }
-        check(!reducers.isEmpty()) {
-            "No reducers defined. Add reducers in a results-block in the DSL"
-        }
         return Store(
             initialState,
             transformers,
