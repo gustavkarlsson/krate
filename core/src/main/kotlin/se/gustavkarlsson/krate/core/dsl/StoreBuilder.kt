@@ -14,7 +14,7 @@ class StoreBuilder<State : Any, Command : Any, Result : Any>
 internal constructor() {
     private var initialState: State? = null
     private var transformers = mutableListOf<StateAwareTransformer<State, Command, Result>>()
-    private var reducers = mutableListOf<Reducer<State, Result>>()
+    private var reducer: Reducer<State, Result>? = null
     private var commandInterceptors = mutableListOf<Interceptor<Command>>()
     private var resultInterceptors = mutableListOf<Interceptor<Result>>()
     private var stateInterceptors = mutableListOf<Interceptor<State>>()
@@ -39,7 +39,7 @@ internal constructor() {
     /**
      * Configures results for the store.
      *
-     * At least one reducer must be defined.
+     * The reducer must be defined.
      *
      * @param block the code used to configure results
      */
@@ -47,7 +47,7 @@ internal constructor() {
         Results<State, Result>()
             .also(block)
             .let {
-                reducers.addAll(it.reducers)
+                reducer = it.reducer
                 resultInterceptors.addAll(it.interceptors)
             }
     }
@@ -78,7 +78,7 @@ internal constructor() {
         plugin.run {
             initialState = changeInitialState(initialState)
             transformers = changeTransformers(transformers).toMutableList()
-            reducers = changeReducers(reducers).toMutableList()
+            reducer = changeReducer(reducer)
             commandInterceptors = changeCommandInterceptors(commandInterceptors).toMutableList()
             resultInterceptors = changeResultInterceptors(resultInterceptors).toMutableList()
             stateInterceptors = changeStateInterceptors(stateInterceptors).toMutableList()
@@ -90,10 +90,13 @@ internal constructor() {
         val initialState = checkNotNull(initialState) {
             "No initial state set. Set the initial state in a states-block in the DSL"
         }
+        val reducer = checkNotNull(reducer) {
+            "No reducer set. Set the reducer in a result-block in the DSL"
+        }
         return Store(
             initialState,
             transformers,
-            reducers,
+            reducer,
             commandInterceptors,
             resultInterceptors,
             stateInterceptors,

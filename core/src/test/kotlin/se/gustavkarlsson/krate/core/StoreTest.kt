@@ -18,7 +18,7 @@ class StoreTest {
 
     private val transformer2Result = NoteCreated(Note(text))
 
-    private val newState = NotesState(listOf(Note(text), Note(text)))
+    private val newState = NotesState(listOf(Note(text)))
 
     private val mockTransformer1 = mock<StateAwareTransformer<NotesState, NotesCommand, NotesResult>> {
         on(it.invoke(any(), any())).thenAnswer {
@@ -37,15 +37,7 @@ class StoreTest {
         }
     }
 
-    private val mockReducer1 = mock<Reducer<NotesState, NotesResult>> {
-        on(it.invoke(any(), any())).thenAnswer {
-            val state = it.arguments[0] as NotesState
-            val result = it.arguments[1] as NoteCreated
-            NotesState(state.notes + result.note)
-        }
-    }
-
-    private val mockReducer2 = mock<Reducer<NotesState, NotesResult>> {
+    private val mockReducer = mock<Reducer<NotesState, NotesResult>> {
         on(it.invoke(any(), any())).thenAnswer {
             val state = it.arguments[0] as NotesState
             val result = it.arguments[1] as NoteCreated
@@ -94,7 +86,7 @@ class StoreTest {
     private val impl = Store(
         initialState,
         listOf(mockTransformer1, mockTransformer2),
-        listOf(mockReducer1, mockReducer2),
+        mockReducer,
         listOf(mockCommandInterceptor1, mockCommandInterceptor2),
         listOf(mockResultInterceptor1, mockResultInterceptor2),
         listOf(mockStateInterceptor1, mockStateInterceptor2),
@@ -171,18 +163,6 @@ class StoreTest {
         inOrder(mockResultInterceptor1, mockResultInterceptor2) {
             verify(mockResultInterceptor1).invoke(any())
             verify(mockResultInterceptor2).invoke(any())
-        }
-    }
-
-    @Test
-    fun `reducers are called in order`() {
-        val text = text
-
-        impl.issue(CreateNote(text))
-
-        inOrder(mockReducer1, mockReducer2) {
-            verify(mockReducer1).invoke(initialState, transformer2Result)
-            verify(mockReducer2).invoke(NotesState(initialState.notes + Note(text)), transformer2Result)
         }
     }
 

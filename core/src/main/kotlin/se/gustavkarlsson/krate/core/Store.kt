@@ -19,7 +19,7 @@ class Store<State : Any, Command : Any, Result : Any>
 internal constructor(
     initialState: State,
     internal val transformers: List<StateAwareTransformer<State, Command, Result>>,
-    internal val reducers: List<Reducer<State, Result>>,
+    internal val reducer: Reducer<State, Result>,
     internal val commandInterceptors: List<Interceptor<Command>>,
     internal val resultInterceptors: List<Interceptor<Result>>,
     internal val stateInterceptors: List<Interceptor<State>>,
@@ -55,9 +55,7 @@ internal constructor(
         .replay(1)
 
     private fun <T> Flowable<T>.intercept(interceptors: List<Interceptor<T>>): Flowable<T> {
-        return interceptors.fold(this) { stream, intercept ->
-            intercept(stream)
-        }
+        return interceptors.fold(this) { stream, intercept -> intercept(stream) }
     }
 
     private fun Flowable<Command>.transformToResults(): Flowable<Result> {
@@ -65,8 +63,7 @@ internal constructor(
     }
 
     private fun Flowable<Result>.reduceToStates(): Flowable<State> {
-        return serialize()
-            .scanWith(::currentState, CompositeReducer(reducers))
+        return serialize().scanWith(::currentState, reducer)
     }
 
     private fun Flowable<State>.setCurrentState(): Flowable<State> {
