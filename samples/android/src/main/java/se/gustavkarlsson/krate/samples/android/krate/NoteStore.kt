@@ -75,19 +75,17 @@ fun buildStore(dao: NoteDao): NoteStore = buildStore {
     }
 
     results {
-        reduce<Notes> { state, (notes) ->
-            state.copy(notes = notes)
-        }
-
-        reduce<SetEditingNote> { state, (note) ->
-            state.copy(editingNote = note)
-        }
-
-        reduce<ChangeEditingNote> { state, (newTitle, newContent) ->
-            state.editingNote?.run {
-                val newNote = copy(title = newTitle ?: title, content = newContent ?: content)
-                state.copy(editingNote = newNote)
-            } ?: state
+        reduce { state, result ->
+            when (result) {
+                is Notes -> state.copy(notes = result.notes)
+                is SetEditingNote -> state.copy(editingNote = result.note)
+                is ChangeEditingNote -> {
+                    state.editingNote?.run {
+                        val newNote = copy(title = result.title ?: title, content = result.content ?: content)
+                        state.copy(editingNote = newNote)
+                    } ?: state
+                }
+            }
         }
 
         watchAll { Log.v("NoteStore", "Result: $it") }

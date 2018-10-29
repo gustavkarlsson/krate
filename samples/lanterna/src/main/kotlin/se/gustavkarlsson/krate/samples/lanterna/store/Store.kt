@@ -56,32 +56,16 @@ val store = buildStore<State, Command, Result> {
     }
 
     results {
-        reduce<Result.LoadingMoreRepos> { state, result ->
-            state.copy(isLoadingNewRepos = result.isLoading)
-        }
-
-        reduce<Result.LoadingRepoDetails> { state, result ->
-            state.copy(isLoadingRepoDetails = result.isLoading)
-        }
-
-        reduce<Result.LoadedMoreRepos> { state, result ->
-            state.copy(repos = state.repos + result.repos)
-        }
-
-        reduce<Result.LoadedRepoDetails> { state, result ->
-            state.copy(openRepo = result.repo)
-        }
-
-        reduce<Result.ClosedRepoDetails> { state, _ ->
-            state.copy(openRepo = null)
-        }
-
-        reduce<Result.GotError> { state, result ->
-            state.copy(errors = state.errors + result.error)
-        }
-
-        reduce<Result.RemovedError> { state, result ->
-            state.copy(errors = state.errors.filter { it != result.error })
+        reduce { state, result ->
+            when (result) {
+                is Result.LoadingMoreRepos -> state.copy(isLoadingNewRepos = result.isLoading)
+                is Result.LoadingRepoDetails -> state.copy(isLoadingRepoDetails = result.isLoading)
+                is Result.LoadedMoreRepos -> state.copy(repos = state.repos + result.repos)
+                is Result.LoadedRepoDetails -> state.copy(openRepo = result.repo)
+                is Result.ClosedRepoDetails -> state.copy(openRepo = null)
+                is Result.GotError -> state.copy(errors = state.errors + result.error)
+                is Result.RemovedError -> state.copy(errors = state.errors.filter { it != result.error })
+            }
         }
     }
 }

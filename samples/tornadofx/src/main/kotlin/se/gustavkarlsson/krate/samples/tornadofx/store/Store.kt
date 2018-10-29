@@ -52,32 +52,34 @@ val store = buildStore<State, Command, Result> {
     }
 
     results {
-        reduce<CreatingNewTodo> { state, _ ->
-            state.copy(creatingTodo = true)
-        }
-
-        reduce<CreatedNewTodo> { state, (createdTodo) ->
-            state.copy(todos = state.todos + createdTodo, creatingTodo = false)
-        }
-
-        reduce<UpdatingTodo> { state, (updatingId) ->
-            state.copy(updatingTodoIds = state.updatingTodoIds + updatingId)
-        }
-
-        reduce<ChangedTodo> { state, (changedTodo) ->
-            val newTodos = state.todos.map {
-                if (it.id == changedTodo.id) {
-                    changedTodo
-                } else {
-                    it
+        reduce { state, result ->
+            when (result) {
+                is CreatingNewTodo -> {
+                    state.copy(creatingTodo = true)
+                }
+                is CreatedNewTodo -> {
+                    state.copy(todos = state.todos + result.todo, creatingTodo = false)
+                }
+                is UpdatingTodo -> {
+                    state.copy(updatingTodoIds = state.updatingTodoIds + result.id)
+                }
+                is ChangedTodo -> {
+                    val changedTodo = result.todo
+                    val newTodos = state.todos.map {
+                        if (it.id == changedTodo.id) {
+                            changedTodo
+                        } else {
+                            it
+                        }
+                    }
+                    state.copy(todos = newTodos, updatingTodoIds = state.updatingTodoIds - changedTodo.id)
+                }
+                is DeletedTodo -> {
+                    val deletedId = result.id
+                    val newTodos = state.todos.filterNot { it.id == deletedId }
+                    state.copy(todos = newTodos, updatingTodoIds = state.updatingTodoIds - deletedId)
                 }
             }
-            state.copy(todos = newTodos, updatingTodoIds = state.updatingTodoIds - changedTodo.id)
-        }
-
-        reduce<DeletedTodo> { state, (deletedId) ->
-            val newTodos = state.todos.filterNot { it.id == deletedId }
-            state.copy(todos = newTodos, updatingTodoIds = state.updatingTodoIds - deletedId)
         }
     }
 }
