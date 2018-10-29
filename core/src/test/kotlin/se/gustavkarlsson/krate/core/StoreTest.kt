@@ -2,12 +2,13 @@ package se.gustavkarlsson.krate.core
 
 import assertk.assert
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
+import assertk.assertions.isTrue
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import io.reactivex.Flowable
 import io.reactivex.schedulers.TestScheduler
-import org.junit.Before
 import org.junit.Test
 
 class StoreTest {
@@ -17,7 +18,7 @@ class StoreTest {
 
     private val transformer2Result = NoteCreated(Note(text))
 
-    private val newState = NotesState(listOf(Note(text), Note(text)))
+    private val newState = NotesState(listOf(Note(text)))
 
     private val mockTransformer1 = mock<StateAwareTransformer<NotesState, NotesCommand, NotesResult>> {
         on(it.invoke(any(), any())).thenAnswer {
@@ -36,15 +37,7 @@ class StoreTest {
         }
     }
 
-    private val mockReducer1 = mock<Reducer<NotesState, NotesResult>> {
-        on(it.invoke(any(), any())).thenAnswer {
-            val state = it.arguments[0] as NotesState
-            val result = it.arguments[1] as NoteCreated
-            NotesState(state.notes + result.note)
-        }
-    }
-
-    private val mockReducer2 = mock<Reducer<NotesState, NotesResult>> {
+    private val mockReducer = mock<Reducer<NotesState, NotesResult>> {
         on(it.invoke(any(), any())).thenAnswer {
             val state = it.arguments[0] as NotesState
             val result = it.arguments[1] as NoteCreated
@@ -93,17 +86,12 @@ class StoreTest {
     private val impl = Store(
         initialState,
         listOf(mockTransformer1, mockTransformer2),
-        listOf(mockReducer1, mockReducer2),
+        mockReducer,
         listOf(mockCommandInterceptor1, mockCommandInterceptor2),
         listOf(mockResultInterceptor1, mockResultInterceptor2),
         listOf(mockStateInterceptor1, mockStateInterceptor2),
         testScheduler
     )
-
-    @Before
-    fun setUp() {
-        impl.subscribeInternal()
-    }
 
     @Test
     fun `currentState before any command has initialState`() {
@@ -114,7 +102,6 @@ class StoreTest {
 
     @Test
     fun `currentState after processing chain has latest state`() {
-        impl.subscribeInternal()
         impl.issue(CreateNote(text))
 
         val result = impl.currentState
@@ -124,8 +111,6 @@ class StoreTest {
 
     @Test
     fun `subscribe before any command gets initial state`() {
-        impl.subscribeInternal()
-
         val observer = impl.states.test()
         testScheduler.triggerActions()
 
@@ -134,8 +119,6 @@ class StoreTest {
 
     @Test
     fun `second subscribe before any command also gets initial state`() {
-        impl.subscribeInternal()
-
         impl.states.subscribe()
         val observer = impl.states.test()
         testScheduler.triggerActions()
@@ -145,7 +128,6 @@ class StoreTest {
 
     @Test
     fun `subscribe after processing chain gets latest state`() {
-        impl.subscribeInternal()
         impl.issue(CreateNote(text))
 
         val observer = impl.states.test()
@@ -156,7 +138,6 @@ class StoreTest {
 
     @Test
     fun `command interceptors are called in order`() {
-        impl.subscribeInternal()
         val note = CreateNote(text)
 
         impl.issue(note)
@@ -169,8 +150,6 @@ class StoreTest {
 
     @Test
     fun `transformers are called in order`() {
-        impl.subscribeInternal()
-
         inOrder(mockTransformer1, mockTransformer2) {
             verify(mockTransformer1).invoke(any(), any())
             verify(mockTransformer2).invoke(any(), any())
@@ -179,8 +158,6 @@ class StoreTest {
 
     @Test
     fun `result interceptors are called in order`() {
-        impl.subscribeInternal()
-
         impl.issue(CreateNote(text))
 
         inOrder(mockResultInterceptor1, mockResultInterceptor2) {
@@ -190,27 +167,45 @@ class StoreTest {
     }
 
     @Test
-    fun `reducers are called in order`() {
-        impl.subscribeInternal()
-        val text = text
-
-        impl.issue(CreateNote(text))
-
-        inOrder(mockReducer1, mockReducer2) {
-            verify(mockReducer1).invoke(initialState, transformer2Result)
-            verify(mockReducer2).invoke(NotesState(initialState.notes + Note(text)), transformer2Result)
-        }
-    }
-
-    @Test
     fun `state interceptors are called in order`() {
-        impl.subscribeInternal()
-
         impl.issue(CreateNote(text))
 
         inOrder(mockStateInterceptor1, mockStateInterceptor2) {
             verify(mockStateInterceptor1).invoke(any())
             verify(mockStateInterceptor2).invoke(any())
         }
+    }
+
+    @Test
+    fun `isDisposed is initially false`() {
+        val result = impl.isDisposed
+
+        assert(result).isFalse()
+    }
+
+    @Test
+    fun `isDisposed is true after disposing`() {
+        impl.dispose()
+
+        val result = impl.isDisposed
+
+        assert(result).isTrue()
+    }
+
+    @Test
+    fun `dispose() can be called twice`() {
+        impl.dispose()
+        impl.dispose()
+    }
+
+    @Test
+    fun `commands issued after dispose() are ignored, even if subscribed`() {
+        impl.states.subscribe()
+        impl.dispose()
+
+        impl.issue(CreateNote(text))
+        val result = impl.currentState
+
+        assert(result).isEqualTo(initialState)
     }
 }

@@ -3,6 +3,8 @@ package se.gustavkarlsson.krate.core
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
 import io.reactivex.Scheduler
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.PublishSubject
 
 /**
@@ -17,12 +19,12 @@ class Store<State : Any, Command : Any, Result : Any>
 internal constructor(
     initialState: State,
     internal val transformers: List<StateAwareTransformer<State, Command, Result>>,
-    internal val reducers: List<Reducer<State, Result>>,
+    internal val reducer: Reducer<State, Result>,
     internal val commandInterceptors: List<Interceptor<Command>>,
     internal val resultInterceptors: List<Interceptor<Result>>,
     internal val stateInterceptors: List<Interceptor<State>>,
     internal val observeScheduler: Scheduler?
-) {
+) : Disposable {
 
     /**
      * The current state of the store
@@ -51,12 +53,9 @@ internal constructor(
         .onBackpressureLatest()
         .setCurrentState()
         .replay(1)
-        .autoConnect()
 
     private fun <T> Flowable<T>.intercept(interceptors: List<Interceptor<T>>): Flowable<T> {
-        return interceptors.fold(this) { stream, intercept ->
-            intercept(stream)
-        }
+        return interceptors.fold(this) { stream, intercept -> intercept(stream) }
     }
 
     private fun Flowable<Command>.transformToResults(): Flowable<Result> {
@@ -64,8 +63,7 @@ internal constructor(
     }
 
     private fun Flowable<Result>.reduceToStates(): Flowable<State> {
-        return serialize()
-            .scanWith(::currentState, CompositeReducer(reducers))
+        return serialize().scanWith(::currentState, reducer)
     }
 
     private fun Flowable<State>.setCurrentState(): Flowable<State> {
@@ -94,7 +92,11 @@ internal constructor(
         } ?: this
     }
 
-    internal fun subscribeInternal() {
-        internalStates.subscribe()
+    private val disposable: Disposable = CompositeDisposable(internalStates.subscribe(), internalStates.connect())
+
+    override fun dispose() {
+        disposable.dispose()
     }
+
+    override fun isDisposed() = disposable.isDisposed
 }

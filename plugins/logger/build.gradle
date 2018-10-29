@@ -1,3 +1,4 @@
+apply plugin: "kotlin"
 apply plugin: "java-library"
 apply plugin: "maven-publish"
 apply plugin: "jacoco"
@@ -38,7 +39,7 @@ dependencies {
     testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockito_kotlin_version", {
         exclude group: "org.jetbrains.kotlin"
     }
-    testImplementation "com.willowtreeapps.assertk:assertk:$assertk_version", {
+    testImplementation "com.willowtreeapps.assertk:assertk-jvm:$assertk_version", {
         exclude group: "org.jetbrains.kotlin"
     }
 }

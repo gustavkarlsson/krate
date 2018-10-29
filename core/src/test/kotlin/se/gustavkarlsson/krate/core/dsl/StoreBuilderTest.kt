@@ -25,7 +25,6 @@ class StoreBuilderTest {
     private val mockTransformer = mock<StateAwareTransformer<NotesState, NotesCommand, NotesResult>>()
     private val mockTypedTransformer = mock<StateAwareTransformer<NotesState, CreateNote, NotesResult>>()
     private val mockReducer = mock<Reducer<NotesState, NotesResult>>()
-    private val mockTypedReducer = mock<Reducer<NotesState, NoteCreated>>()
     private val mockCommandInterceptor = mock<Interceptor<NotesCommand>> {
         on(it.invoke(any())).thenAnswer {
             it.arguments[0]
@@ -56,9 +55,8 @@ class StoreBuilderTest {
             val transformers = it.arguments[0] as List<StateAwareTransformer<NotesState, NotesCommand, NotesResult>>
             transformers + mockTransformer
         }
-        on(it.changeReducers(any())).thenAnswer {
-            val reducers = it.arguments[0] as List<Reducer<NotesState, NotesResult>>
-            reducers + mockReducer
+        on(it.changeReducer(any())).thenAnswer {
+            mockReducer
         }
         on(it.changeCommandInterceptors(any())).thenAnswer {
             val interceptors = it.arguments[0] as List<Interceptor<NotesCommand>>
@@ -95,8 +93,7 @@ class StoreBuilderTest {
                     watch(mockTypedCommandWatcher)
                 }
                 results {
-                    reduceAll(mockReducer)
-                    reduce(mockTypedReducer)
+                    reduce(mockReducer)
                     watchAll(mockResultWatcher)
                     intercept(mockResultInterceptor)
                     watch(mockTypedResultWatcher)
@@ -111,9 +108,7 @@ class StoreBuilderTest {
                 assert(transformers).hasSize(3)
                 assert(transformers[0]).isEqualTo(mockTransformer)
                 assert(transformers[2]).isEqualTo(mockTransformer)
-                assert(reducers).hasSize(3)
-                assert(reducers[0]).isEqualTo(mockReducer)
-                assert(reducers[2]).isEqualTo(mockReducer)
+                assert(reducer).isEqualTo(mockReducer)
                 assert(commandInterceptors).hasSize(4)
                 assert(resultInterceptors).hasSize(4)
                 assert(stateInterceptors).hasSize(3)
@@ -129,11 +124,8 @@ class StoreBuilderTest {
                 states {
                     initial = mockInitialState
                 }
-                commands {
-                    transformAllWithState(mockTransformer)
-                }
                 results {
-                    reduceAll(mockReducer)
+                    reduce { state, _ -> state }
                 }
             }
 
@@ -144,26 +136,8 @@ class StoreBuilderTest {
     fun `build without initial state throws exception`() {
         val builder = StoreBuilder<NotesState, NotesCommand, NotesResult>()
             .apply {
-                commands {
-                    transformAllWithState(mockTransformer)
-                }
                 results {
-                    reduceAll(mockReducer)
-                }
-            }
-
-        builder.build()
-    }
-
-    @Test(expected = IllegalStateException::class)
-    fun `build without transformer throws exception`() {
-        val builder = StoreBuilder<NotesState, NotesCommand, NotesResult>()
-            .apply {
-                states {
-                    initial = mockInitialState
-                }
-                results {
-                    reduceAll(mockReducer)
+                    reduce { state, _ -> state }
                 }
             }
 
@@ -176,9 +150,6 @@ class StoreBuilderTest {
             .apply {
                 states {
                     initial = mockInitialState
-                }
-                commands {
-                    transformAllWithState(mockTransformer)
                 }
             }
 

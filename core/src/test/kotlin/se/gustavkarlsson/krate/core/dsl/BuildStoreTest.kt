@@ -11,7 +11,7 @@ class BuildStoreTest {
         val store = buildStore<Int, Unit, Unit> {
             states { initial = 5 }
             commands { transformAll { it } }
-            results { reduceAll { state, _ -> state } }
+            results { reduce { state, _ -> state } }
         }
 
         assert(store.currentState).isEqualTo(5)

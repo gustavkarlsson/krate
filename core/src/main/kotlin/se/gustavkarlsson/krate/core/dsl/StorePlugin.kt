@@ -12,7 +12,7 @@ interface StorePlugin<State : Any, Command : Any, Result : Any> {
         transformers: List<StateAwareTransformer<State, Command, Result>>
     ): List<StateAwareTransformer<State, Command, Result>> = transformers
 
-    fun changeReducers(reducers: List<Reducer<State, Result>>): List<Reducer<State, Result>> = reducers
+    fun changeReducer(reducer: Reducer<State, Result>?): Reducer<State, Result>? = reducer
 
     fun changeCommandInterceptors(interceptors: List<Interceptor<Command>>): List<Interceptor<Command>> = interceptors
 

@@ -1,28 +1,31 @@
 buildscript {
     ext {
         // Misc
-        kotlin_version = "1.2.60"
-        release_plugin_version = "1.9.2"
-        ktlint_version = "0.24.0"
+        kotlin_version = "1.2.71"
+        release_plugin_version = "1.9.3"
+        ktlint_version = "0.29.0"
         dokka_version = "0.9.17"
+        android_gradle_version = "3.2.0"
 
         // Implementation
-        rxjava_version = "2.2.0"
+        rxjava_version = "2.2.2"
 
         // Test
         junit_version = "4.12"
-        assertk_version = "0.10"
-        mockito_version = "2.19.0"
-        mockito_kotlin_version = "2.0.0-RC1"
+        assertk_version = "0.12"
+        mockito_version = "2.23.0"
+        mockito_kotlin_version = "2.0.0-RC3"
     }
     repositories {
         jcenter()
         mavenCentral()
+        google()
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "pl.allegro.tech.build:axion-release-plugin:$release_plugin_version"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:$dokka_version"
+        classpath "com.android.tools.build:gradle:$android_gradle_version"
     }
 }
 
@@ -38,12 +41,11 @@ allprojects {
     repositories {
         jcenter()
         mavenCentral()
+        google()
     }
 }
 
 subprojects {
-    apply plugin: "kotlin"
-
     group = "se.gustavkarlsson.krate"
     version = scmVersion.version
 }
