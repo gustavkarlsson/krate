@@ -85,8 +85,11 @@ val store = buildStore<State, Command, Result> {
 
     results {
         // Update state whenever a WeatherReport arrives
-        reduce<WeatherReport> { state, report ->
-            state.copy(weather = report.weather)
+        reduce { state, result ->
+            when (result) {
+                WeatherReport -> state.copy(weather = report.weather)
+                else -> state
+            }
         }
     }
 }
