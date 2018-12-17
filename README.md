@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.com/gustavkarlsson/krate.svg?branch=master)](https://travis-ci.com/gustavkarlsson/krate)
+[![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-Krate-green.svg?style=flat)](https://android-arsenal.com/details/1/7386)
 [![codecov](https://codecov.io/gh/gustavkarlsson/krate/branch/master/graph/badge.svg)](https://codecov.io/gh/gustavkarlsson/krate)
 [![codebeat badge](https://codebeat.co/badges/ee4f1e26-fca2-420a-ac9a-e0af088242be)](https://codebeat.co/projects/github-com-gustavkarlsson-krate-master)
 [![Version](https://jitpack.io/v/gustavkarlsson/krate.svg)](https://jitpack.io/#gustavkarlsson/krate)
