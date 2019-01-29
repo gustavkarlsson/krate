@@ -7,6 +7,7 @@ import assertk.assertions.isTrue
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.verify
 import io.reactivex.Flowable
 import io.reactivex.schedulers.TestScheduler
 import org.junit.Test
@@ -134,6 +135,17 @@ class StoreTest {
         testScheduler.triggerActions()
 
         observer.assertValue(newState)
+    }
+
+    @Test
+    fun `subscribe twice runs reducer only once`() {
+        impl.states.subscribe()
+        impl.states.subscribe()
+
+        impl.issue(CreateNote(text))
+        testScheduler.triggerActions()
+
+        verify(mockReducer).invoke(any(), any())
     }
 
     @Test

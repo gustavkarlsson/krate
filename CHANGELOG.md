@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0
+
+* Simplified `results` DSL block by allowing only a single reducer
+
 ## 1.1.0
 
 * Store now implements Disposable.
