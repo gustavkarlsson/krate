@@ -19,7 +19,7 @@ abstract class Vcr<State : Any, Command : Any, Result : Any>(
     private var tape: Tape<State>? = null
     private var playingInProgress: Disposable? = null
     private var recordingInProgress: Disposable? = null
-    private var lastSampleTime = 0L
+    private var startTime = 0L
 
     override fun changeCommandInterceptors(interceptors: List<Interceptor<Command>>): List<Interceptor<Command>> =
         interceptors + IgnoreIfPlaying()
@@ -33,13 +33,12 @@ abstract class Vcr<State : Any, Command : Any, Result : Any>(
     @Synchronized
     fun record(name: String) {
         stop()
-        lastSampleTime = currentTimeMillis()
+        startTime = currentTimeMillis()
         tape = newTape(name).also { tape ->
             recordingInProgress = recordingSubject
                 .map { state ->
-                    val delay = currentTimeMillis() - lastSampleTime
-                    lastSampleTime += delay
-                    Sample(state, delay)
+                    val timestamp = currentTimeMillis() - startTime
+                    Sample(state, timestamp)
                 }
                 .subscribe(tape::append)
         }
@@ -53,7 +52,7 @@ abstract class Vcr<State : Any, Command : Any, Result : Any>(
         recordingInProgress = null
         tape?.stop()
         tape = null
-        lastSampleTime = 0
+        startTime = 0
     }
 
     @Synchronized
@@ -61,7 +60,7 @@ abstract class Vcr<State : Any, Command : Any, Result : Any>(
         stop()
         tape = loadTape(name).also { tape ->
             playingInProgress = tape.play()
-                .delay { Flowable.timer(it.delay, TimeUnit.MILLISECONDS) }
+                .delay { Flowable.timer(it.timestamp, TimeUnit.MILLISECONDS) }
                 .map { it.state }
                 .subscribe(playingSubject::onNext)
         }
