@@ -21,17 +21,14 @@ abstract class Vcr<State : Any, Command : Any, Result : Any>(
     private var recordingInProgress: Disposable? = null
     private var lastSampleTime = 0L
 
-    override fun changeCommandInterceptors(interceptors: List<Interceptor<Command>>): List<Interceptor<Command>> {
-        return interceptors + IgnoreIfPlaying()
-    }
+    override fun changeCommandInterceptors(interceptors: List<Interceptor<Command>>): List<Interceptor<Command>> =
+        interceptors + IgnoreIfPlaying()
 
-    override fun changeResultInterceptors(interceptors: List<Interceptor<Result>>): List<Interceptor<Result>> {
-        return interceptors + IgnoreIfPlaying()
-    }
+    override fun changeResultInterceptors(interceptors: List<Interceptor<Result>>): List<Interceptor<Result>> =
+        interceptors + IgnoreIfPlaying()
 
-    override fun changeStateInterceptors(interceptors: List<Interceptor<State>>): List<Interceptor<State>> {
-        return interceptors + Record() + Play()
-    }
+    override fun changeStateInterceptors(interceptors: List<Interceptor<State>>): List<Interceptor<State>> =
+        interceptors + Record() + Play()
 
     @Synchronized
     fun record(name: String) {
@@ -62,8 +59,8 @@ abstract class Vcr<State : Any, Command : Any, Result : Any>(
     @Synchronized
     fun play(name: String) {
         stop()
-        tape = loadTape(name).also { loaded ->
-            playingInProgress = loaded.play()
+        tape = loadTape(name).also { tape ->
+            playingInProgress = tape.play()
                 .delay { Flowable.timer(it.delay, TimeUnit.MILLISECONDS) }
                 .map { it.state }
                 .subscribe(playingSubject::onNext)
@@ -84,26 +81,19 @@ abstract class Vcr<State : Any, Command : Any, Result : Any>(
     protected abstract fun loadTape(name: String): Tape<State>
 
     private inner class IgnoreIfPlaying<T> : Interceptor<T> {
-        override fun invoke(items: Flowable<T>): Flowable<T> {
-            return items.flatMapMaybe {
-                if (playingInProgress != null) {
-                    Maybe.empty()
-                } else {
-                    Maybe.just(it)
-                }
+        override fun invoke(items: Flowable<T>): Flowable<T> =
+            items.flatMapMaybe {
+                if (isPlaying) Maybe.empty() else Maybe.just(it)
             }
-        }
     }
 
     private inner class Record : Interceptor<State> {
-        override fun invoke(states: Flowable<State>): Flowable<State> {
-            return states.doOnNext(recordingSubject::onNext)
-        }
+        override fun invoke(states: Flowable<State>): Flowable<State> =
+            states.doOnNext(recordingSubject::onNext)
     }
 
     private inner class Play : Interceptor<State> {
-        override fun invoke(states: Flowable<State>): Flowable<State> {
-            return states.mergeWith(playingSubject.toFlowable(BackpressureStrategy.BUFFER))
-        }
+        override fun invoke(states: Flowable<State>): Flowable<State> =
+            states.mergeWith(playingSubject.toFlowable(BackpressureStrategy.BUFFER))
     }
 }

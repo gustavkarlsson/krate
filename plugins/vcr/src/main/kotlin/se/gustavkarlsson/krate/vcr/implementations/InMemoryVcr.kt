@@ -9,27 +9,18 @@ class InMemoryVcr<State : Any, Command : Any, Result : Any> : Vcr<State, Command
 
     private val shelf = hashMapOf<String, Tape<State>>()
 
-    override fun newTape(name: String): Tape<State> {
-        return InMemoryTape<State>().also {
-            shelf[name] = it
-        }
-    }
+    override fun newTape(name: String): Tape<State> = InMemoryTape<State>().also { shelf[name] = it }
 
-    override fun loadTape(name: String): Tape<State> {
-        return shelf[name] ?: throw IllegalArgumentException("Tape not found: $name")
-    }
+    override fun loadTape(name: String): Tape<State> =
+        shelf[name] ?: throw IllegalArgumentException("Tape not found: $name")
 
     class InMemoryTape<State : Any> : Tape<State> {
         private val samples = mutableListOf<Sample<State>>()
 
-        override fun append(sample: Sample<State>) {
-            samples += sample
-        }
+        override fun append(sample: Sample<State>) = samples.plusAssign(sample)
 
         override fun stop() = Unit
 
-        override fun play(): Flowable<Sample<State>> {
-            return Flowable.fromIterable(samples.toList())
-        }
+        override fun play(): Flowable<Sample<State>> = Flowable.fromIterable(samples.toList())
     }
 }
