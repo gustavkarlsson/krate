@@ -10,7 +10,7 @@ import se.gustavkarlsson.krate.core.Interceptor
 import se.gustavkarlsson.krate.core.dsl.StorePlugin
 import java.util.concurrent.TimeUnit
 
-abstract class Vcr<State : Any>(
+abstract class Vcr<State : Any, TapeId>(
     private val currentTimeMillis: () -> Long = System::currentTimeMillis
 ) : StorePlugin<State, Any, Any> {
     private val playingSubject = PublishSubject.create<State>()
@@ -31,10 +31,10 @@ abstract class Vcr<State : Any>(
         interceptors + Record() + Play()
 
     @Synchronized
-    fun record(name: String) {
+    fun record(tapeId: TapeId) {
         stop()
         startTime = currentTimeMillis()
-        tape = newTape(name).also { tape ->
+        tape = newTape(tapeId).also { tape ->
             recordingInProgress = recordingSubject
                 .map { state ->
                     val timestamp = currentTimeMillis() - startTime
@@ -56,9 +56,9 @@ abstract class Vcr<State : Any>(
     }
 
     @Synchronized
-    fun play(name: String) {
+    fun play(tapeId: TapeId) {
         stop()
-        tape = loadTape(name).also { tape ->
+        tape = loadTape(tapeId).also { tape ->
             playingInProgress = tape.play()
                 .delay { Flowable.timer(it.timestamp, TimeUnit.MILLISECONDS) }
                 .map { it.state }
@@ -75,9 +75,9 @@ abstract class Vcr<State : Any>(
     val isStopped: Boolean
         get() = !isRecording && !isPlaying
 
-    protected abstract fun newTape(name: String): Tape<State>
+    protected abstract fun newTape(tapeId: TapeId): Tape<State>
 
-    protected abstract fun loadTape(name: String): Tape<State>
+    protected abstract fun loadTape(tapeId: TapeId): Tape<State>
 
     private inner class IgnoreIfPlaying<T> : Interceptor<T> {
         override fun invoke(items: Flowable<T>): Flowable<T> =

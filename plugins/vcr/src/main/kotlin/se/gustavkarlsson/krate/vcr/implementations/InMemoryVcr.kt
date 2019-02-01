@@ -5,14 +5,14 @@ import se.gustavkarlsson.krate.vcr.Sample
 import se.gustavkarlsson.krate.vcr.Tape
 import se.gustavkarlsson.krate.vcr.Vcr
 
-class InMemoryVcr<State : Any> : Vcr<State>() {
+class InMemoryVcr<State : Any> : Vcr<State, String>() {
 
     private val shelf = hashMapOf<String, Tape<State>>()
 
-    override fun newTape(name: String): Tape<State> = InMemoryTape<State>().also { shelf[name] = it }
+    override fun newTape(tapeId: String): Tape<State> = InMemoryTape<State>().also { shelf[tapeId] = it }
 
-    override fun loadTape(name: String): Tape<State> =
-        shelf[name] ?: throw IllegalArgumentException("Tape not found: $name")
+    override fun loadTape(tapeId: String): Tape<State> =
+        shelf[tapeId] ?: throw IllegalArgumentException("Tape not found: $tapeId")
 
     private class InMemoryTape<State : Any> : Tape<State> {
         private val samples = mutableListOf<Sample<State>>()
