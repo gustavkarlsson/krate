@@ -10,9 +10,9 @@ import se.gustavkarlsson.krate.core.Interceptor
 import se.gustavkarlsson.krate.core.dsl.StorePlugin
 import java.util.concurrent.TimeUnit
 
-abstract class Vcr<State : Any, Command : Any, Result : Any>(
+abstract class Vcr<State : Any>(
     private val currentTimeMillis: () -> Long = System::currentTimeMillis
-) : StorePlugin<State, Command, Result> {
+) : StorePlugin<State, Any, Any> {
     private val playingSubject = PublishSubject.create<State>()
     private val recordingSubject = BehaviorSubject.create<State>()
 
@@ -21,10 +21,10 @@ abstract class Vcr<State : Any, Command : Any, Result : Any>(
     private var recordingInProgress: Disposable? = null
     private var startTime = 0L
 
-    override fun changeCommandInterceptors(interceptors: List<Interceptor<Command>>): List<Interceptor<Command>> =
+    override fun changeCommandInterceptors(interceptors: List<Interceptor<Any>>): List<Interceptor<Any>> =
         interceptors + IgnoreIfPlaying()
 
-    override fun changeResultInterceptors(interceptors: List<Interceptor<Result>>): List<Interceptor<Result>> =
+    override fun changeResultInterceptors(interceptors: List<Interceptor<Any>>): List<Interceptor<Any>> =
         interceptors + IgnoreIfPlaying()
 
     override fun changeStateInterceptors(interceptors: List<Interceptor<State>>): List<Interceptor<State>> =
