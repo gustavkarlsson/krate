@@ -19,30 +19,26 @@ abstract class Vcr<State : Any, Command : Any, Result : Any>(
     private var tape: Tape<State>? = null
     private var playingInProgress: Disposable? = null
     private var recordingInProgress: Disposable? = null
-    private var lastSampleTime = 0L
+    private var startTime = 0L
 
-    override fun changeCommandInterceptors(interceptors: List<Interceptor<Command>>): List<Interceptor<Command>> {
-        return interceptors + IgnoreIfPlaying()
-    }
+    override fun changeCommandInterceptors(interceptors: List<Interceptor<Command>>): List<Interceptor<Command>> =
+        interceptors + IgnoreIfPlaying()
 
-    override fun changeResultInterceptors(interceptors: List<Interceptor<Result>>): List<Interceptor<Result>> {
-        return interceptors + IgnoreIfPlaying()
-    }
+    override fun changeResultInterceptors(interceptors: List<Interceptor<Result>>): List<Interceptor<Result>> =
+        interceptors + IgnoreIfPlaying()
 
-    override fun changeStateInterceptors(interceptors: List<Interceptor<State>>): List<Interceptor<State>> {
-        return interceptors + Record() + Play()
-    }
+    override fun changeStateInterceptors(interceptors: List<Interceptor<State>>): List<Interceptor<State>> =
+        interceptors + Record() + Play()
 
     @Synchronized
     fun record(name: String) {
         stop()
-        lastSampleTime = currentTimeMillis()
+        startTime = currentTimeMillis()
         tape = newTape(name).also { tape ->
             recordingInProgress = recordingSubject
                 .map { state ->
-                    val delay = currentTimeMillis() - lastSampleTime
-                    lastSampleTime += delay
-                    Sample(state, delay)
+                    val timestamp = currentTimeMillis() - startTime
+                    Sample(state, timestamp)
                 }
                 .subscribe(tape::append)
         }
@@ -56,15 +52,15 @@ abstract class Vcr<State : Any, Command : Any, Result : Any>(
         recordingInProgress = null
         tape?.stop()
         tape = null
-        lastSampleTime = 0
+        startTime = 0
     }
 
     @Synchronized
     fun play(name: String) {
         stop()
-        tape = loadTape(name).also { loaded ->
-            playingInProgress = loaded.play()
-                .delay { Flowable.timer(it.delay, TimeUnit.MILLISECONDS) }
+        tape = loadTape(name).also { tape ->
+            playingInProgress = tape.play()
+                .delay { Flowable.timer(it.timestamp, TimeUnit.MILLISECONDS) }
                 .map { it.state }
                 .subscribe(playingSubject::onNext)
         }
@@ -84,26 +80,19 @@ abstract class Vcr<State : Any, Command : Any, Result : Any>(
     protected abstract fun loadTape(name: String): Tape<State>
 
     private inner class IgnoreIfPlaying<T> : Interceptor<T> {
-        override fun invoke(items: Flowable<T>): Flowable<T> {
-            return items.flatMapMaybe {
-                if (playingInProgress != null) {
-                    Maybe.empty()
-                } else {
-                    Maybe.just(it)
-                }
+        override fun invoke(items: Flowable<T>): Flowable<T> =
+            items.flatMapMaybe {
+                if (isPlaying) Maybe.empty() else Maybe.just(it)
             }
-        }
     }
 
     private inner class Record : Interceptor<State> {
-        override fun invoke(states: Flowable<State>): Flowable<State> {
-            return states.doOnNext(recordingSubject::onNext)
-        }
+        override fun invoke(states: Flowable<State>): Flowable<State> =
+            states.doOnNext(recordingSubject::onNext)
     }
 
     private inner class Play : Interceptor<State> {
-        override fun invoke(states: Flowable<State>): Flowable<State> {
-            return states.mergeWith(playingSubject.toFlowable(BackpressureStrategy.BUFFER))
-        }
+        override fun invoke(states: Flowable<State>): Flowable<State> =
+            states.mergeWith(playingSubject.toFlowable(BackpressureStrategy.BUFFER))
     }
 }
