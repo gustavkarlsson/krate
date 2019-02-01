@@ -1,8 +1,10 @@
 package se.gustavkarlsson.krate.vcr
 
 import io.reactivex.BackpressureStrategy
+import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Maybe
+import io.reactivex.Single
 import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
@@ -16,9 +18,8 @@ abstract class Vcr<State : Any, TapeId>(
     private val playingSubject = PublishSubject.create<State>()
     private val recordingSubject = BehaviorSubject.create<State>()
 
-    private var tape: Tape<State>? = null
-    private var playingInProgress: Disposable? = null
-    private var recordingInProgress: Disposable? = null
+    private var recording: Disposable? = null
+    private var playback: Disposable? = null
     private var startTime = 0L
 
     override fun changeCommandInterceptors(interceptors: List<Interceptor<Any>>): List<Interceptor<Any>> =
@@ -34,50 +35,57 @@ abstract class Vcr<State : Any, TapeId>(
     fun record(tapeId: TapeId) {
         stop()
         startTime = currentTimeMillis()
-        tape = newTape(tapeId).also { tape ->
-            recordingInProgress = recordingSubject
-                .map { state ->
-                    val timestamp = currentTimeMillis() - startTime
-                    Sample(state, timestamp)
-                }
-                .subscribe(tape::append)
-        }
-    }
-
-    @Synchronized
-    fun stop() {
-        playingInProgress?.dispose()
-        playingInProgress = null
-        recordingInProgress?.dispose()
-        recordingInProgress = null
-        tape?.stop()
-        tape = null
-        startTime = 0
+        recording = startRecording(tapeId)
+            .flatMapCompletable { recording ->
+                recordingSubject
+                    .map { state ->
+                        val timestamp = currentTimeMillis() - startTime
+                        Sample(state, timestamp)
+                    }
+                    .concatMapCompletable(recording::write)
+                    .doOnDispose(recording::dispose)
+            }
+            .subscribe()
     }
 
     @Synchronized
     fun play(tapeId: TapeId) {
         stop()
-        tape = loadTape(tapeId).also { tape ->
-            playingInProgress = tape.play()
-                .delay { Flowable.timer(it.timestamp, TimeUnit.MILLISECONDS) }
-                .map { it.state }
-                .subscribe(playingSubject::onNext)
-        }
+        playback = startPlaying(tapeId)
+            .delay { Flowable.timer(it.timestamp, TimeUnit.MILLISECONDS) }
+            .map { it.state }
+            .subscribe(playingSubject::onNext)
+    }
+
+    @Synchronized
+    fun erase(tapeId: TapeId) {
+        stop()
+        eraseTape(tapeId)
+    }
+
+    @Synchronized
+    fun stop() {
+        recording?.dispose()
+        recording = null
+        playback?.dispose()
+        playback = null
+        startTime = 0
     }
 
     val isRecording: Boolean
-        get() = recordingInProgress != null
+        get() = recording != null
 
     val isPlaying: Boolean
-        get() = playingInProgress != null
+        get() = playback != null
 
     val isStopped: Boolean
         get() = !isRecording && !isPlaying
 
-    protected abstract fun newTape(tapeId: TapeId): Tape<State>
+    protected abstract fun startRecording(tapeId: TapeId): Single<Recording<State>>
 
-    protected abstract fun loadTape(tapeId: TapeId): Tape<State>
+    protected abstract fun startPlaying(tapeId: TapeId): Flowable<Sample<State>>
+
+    protected abstract fun eraseTape(tapeId: TapeId): Completable
 
     private inner class IgnoreIfPlaying<T> : Interceptor<T> {
         override fun invoke(items: Flowable<T>): Flowable<T> =
