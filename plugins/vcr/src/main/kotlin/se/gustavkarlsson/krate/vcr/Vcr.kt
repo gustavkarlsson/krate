@@ -55,12 +55,13 @@ abstract class Vcr<State : Any, TapeId>(
         startRecording(tapeId)
             .flatMapCompletable { recording ->
                 recordingSubject
-                    .map { state ->
+                    .doOnNext { state ->
                         val timestamp = currentTimeMillis() - startTime
-                        Sample(state, timestamp)
+                        val sample = Sample(state, timestamp)
+                        recording.write(sample)
                     }
-                    .concatMapCompletable(recording::write)
                     .doOnDispose(recording::dispose)
+                    .ignoreElements()
             }
 
     private fun doPlay(tapeId: TapeId): Completable =

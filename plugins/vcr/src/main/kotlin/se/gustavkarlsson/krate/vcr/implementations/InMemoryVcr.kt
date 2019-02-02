@@ -29,9 +29,8 @@ class InMemoryVcr<State : Any> : Vcr<State, String>() {
     }
 
     private class InMemoryRecording<State : Any>(private val samples: MutableList<Sample<State>>) : Recording<State> {
-        override fun write(sample: Sample<State>): Completable {
+        override fun write(sample: Sample<State>) {
             samples.plusAssign(sample)
-            return Completable.complete()
         }
 
         override fun isDisposed(): Boolean = false
