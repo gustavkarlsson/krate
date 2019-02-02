@@ -5,7 +5,6 @@ import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Maybe
 import io.reactivex.Single
-import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import se.gustavkarlsson.krate.core.Interceptor
@@ -19,6 +18,12 @@ private sealed class Command<TapeId> {
     data class Erase<TapeId>(val tapeId: TapeId) : Command<TapeId>()
 }
 
+private sealed class State<TapeId> {
+    object Idle : State<Nothing>()
+    class Recording<TapeId>(val tapeId: TapeId) : State<TapeId>()
+    class Playing<TapeId>(val tapeId: TapeId) : State<TapeId>()
+}
+
 abstract class Vcr<State : Any, TapeId>(
     private val currentTimeMillis: () -> Long = System::currentTimeMillis
 ) : StorePlugin<State, Any, Any> {
@@ -26,25 +31,13 @@ abstract class Vcr<State : Any, TapeId>(
     private val playingSubject = PublishSubject.create<State>()
     private val recordingSubject = BehaviorSubject.create<State>()
 
-    private var recording: Disposable? = null
-    private var playback: Disposable? = null
-    private var startTime = 0L
-
-    override fun changeCommandInterceptors(interceptors: List<Interceptor<Any>>): List<Interceptor<Any>> =
-        interceptors + IgnoreIfPlaying()
-
-    override fun changeResultInterceptors(interceptors: List<Interceptor<Any>>): List<Interceptor<Any>> =
-        interceptors + IgnoreIfPlaying()
-
-    override fun changeStateInterceptors(interceptors: List<Interceptor<State>>): List<Interceptor<State>> =
-        interceptors + Record() + Play()
-
     init {
         commands
             .switchMapCompletable {
+                isPlaying = it is Command.Play
                 when (it) {
                     is Command.Stop -> Completable.complete()
-                    is Command.Record -> doRecord(it.tapeId)
+                    is Command.Record -> doRecord(it.tapeId, it.startTime)
                     is Command.Play -> doPlay(it.tapeId)
                     is Command.Erase -> doErase(it.tapeId)
                 }
@@ -52,9 +45,10 @@ abstract class Vcr<State : Any, TapeId>(
             .subscribe()
     }
 
-    private fun doRecord(tapeId: TapeId): Completable {
-        startTime = currentTimeMillis()
-        recording = startRecording(tapeId)
+    private var isPlaying = false
+
+    private fun doRecord(tapeId: TapeId, startTime: Long): Completable =
+        startRecording(tapeId)
             .flatMapCompletable { recording ->
                 recordingSubject
                     .map { state ->
@@ -64,34 +58,30 @@ abstract class Vcr<State : Any, TapeId>(
                     .concatMapCompletable(recording::write)
                     .doOnDispose(recording::dispose)
             }
-            .subscribe()
-    }
 
-    fun doPlay(tapeId: TapeId): Completable {
-        playback = startPlaying(tapeId)
+    private fun doPlay(tapeId: TapeId): Completable =
+        startPlaying(tapeId)
             .delay { Flowable.timer(it.timestamp, TimeUnit.MILLISECONDS) }
             .map { it.state }
-            .subscribe(playingSubject::onNext)
-    }
+            .doOnNext(playingSubject::onNext)
+            .ignoreElements()
 
-    fun doErase(tapeId: TapeId): Completable {
-        eraseTape(tapeId)
-    }
-
-    val isRecording: Boolean
-        get() = recording != null
-
-    val isPlaying: Boolean
-        get() = playback != null
-
-    val isStopped: Boolean
-        get() = !isRecording && !isPlaying
+    private fun doErase(tapeId: TapeId): Completable = eraseTape(tapeId)
 
     protected abstract fun startRecording(tapeId: TapeId): Single<Recording<State>>
 
     protected abstract fun startPlaying(tapeId: TapeId): Flowable<Sample<State>>
 
     protected abstract fun eraseTape(tapeId: TapeId): Completable
+
+    override fun changeCommandInterceptors(interceptors: List<Interceptor<Any>>): List<Interceptor<Any>> =
+        interceptors + IgnoreIfPlaying()
+
+    override fun changeResultInterceptors(interceptors: List<Interceptor<Any>>): List<Interceptor<Any>> =
+        interceptors + IgnoreIfPlaying()
+
+    override fun changeStateInterceptors(interceptors: List<Interceptor<State>>): List<Interceptor<State>> =
+        interceptors + Record() + Play()
 
     private inner class IgnoreIfPlaying<T> : Interceptor<T> {
         override fun invoke(items: Flowable<T>): Flowable<T> =
