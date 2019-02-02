@@ -5,6 +5,7 @@ import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Maybe
 import io.reactivex.Single
+import io.reactivex.functions.BiFunction
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import se.gustavkarlsson.krate.core.Interceptor
@@ -18,23 +19,16 @@ private sealed class Command<TapeId> {
     data class Erase<TapeId>(val tapeId: TapeId) : Command<TapeId>()
 }
 
-private sealed class State<TapeId> {
-    object Idle : State<Nothing>()
-    class Recording<TapeId>(val tapeId: TapeId) : State<TapeId>()
-    class Playing<TapeId>(val tapeId: TapeId) : State<TapeId>()
-}
-
 abstract class Vcr<State : Any, TapeId>(
     private val currentTimeMillis: () -> Long = System::currentTimeMillis
 ) : StorePlugin<State, Any, Any> {
-    private val commands = PublishSubject.create<Command<TapeId>>().serialize()
+    private val commands = PublishSubject.create<Command<TapeId>>().toSerialized()
     private val playingSubject = PublishSubject.create<State>()
     private val recordingSubject = BehaviorSubject.create<State>()
 
     init {
         commands
             .switchMapCompletable {
-                isPlaying = it is Command.Play
                 when (it) {
                     is Command.Stop -> Completable.complete()
                     is Command.Record -> doRecord(it.tapeId, it.startTime)
@@ -45,7 +39,17 @@ abstract class Vcr<State : Any, TapeId>(
             .subscribe()
     }
 
-    private var isPlaying = false
+    fun record(tapeId: TapeId) {
+        commands.onNext(Command.Record(tapeId, currentTimeMillis()))
+    }
+
+    fun play(tapeId: TapeId) {
+        commands.onNext(Command.Play(tapeId))
+    }
+
+    fun erase(tapeId: TapeId) {
+        commands.onNext(Command.Erase(tapeId))
+    }
 
     private fun doRecord(tapeId: TapeId, startTime: Long): Completable =
         startRecording(tapeId)
@@ -85,9 +89,12 @@ abstract class Vcr<State : Any, TapeId>(
 
     private inner class IgnoreIfPlaying<T> : Interceptor<T> {
         override fun invoke(items: Flowable<T>): Flowable<T> =
-            items.flatMapMaybe {
-                if (isPlaying) Maybe.empty() else Maybe.just(it)
-            }
+            items.withLatestFrom(
+                commands.toFlowable(BackpressureStrategy.LATEST),
+                BiFunction { item: T, command: Command<TapeId> ->
+                    if (command is Command.Play) Maybe.empty() else Maybe.just(item)
+                })
+                .flatMapMaybe { it }
     }
 
     private inner class Record : Interceptor<State> {
