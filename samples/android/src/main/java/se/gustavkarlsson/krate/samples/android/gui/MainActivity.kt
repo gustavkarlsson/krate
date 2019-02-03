@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun bind() {
-        navController.addOnNavigatedListener { _, destination ->
+        navController.addOnDestinationChangedListener { _, destination, _ ->
             if (destination.id != R.id.editNoteFragment) {
                 viewModel.onNotNavigatingToEditNote()
             }
