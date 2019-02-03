@@ -6,10 +6,10 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import se.gustavkarlsson.krate.core.Store
 import se.gustavkarlsson.krate.core.dsl.buildStore
-import se.gustavkarlsson.krate.samples.android.database.toDb
-import se.gustavkarlsson.krate.samples.android.database.toEntity
 import se.gustavkarlsson.krate.samples.android.database.DbNote
 import se.gustavkarlsson.krate.samples.android.database.NoteDao
+import se.gustavkarlsson.krate.samples.android.database.toDb
+import se.gustavkarlsson.krate.samples.android.database.toEntity
 import se.gustavkarlsson.krate.samples.android.domain.Note
 
 typealias NoteStore = Store<State, Command, Result>
@@ -97,4 +97,6 @@ fun buildStore(dao: NoteDao): NoteStore = buildStore {
 
         watchAll { Log.v("NoteStore", "State: $it") }
     }
+
+    plugin(vcr)
 }
