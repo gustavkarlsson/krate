@@ -5,7 +5,7 @@ apply plugin: "kotlin-android-extensions"
 
 android {
     compileSdkVersion 28
-    buildToolsVersion "28.0.2"
+    buildToolsVersion "28.0.3"
     defaultConfig {
         applicationId "se.gustavkarlsson.krate.samples.android"
         minSdkVersion 21
@@ -35,13 +35,13 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     // Support
-    implementation "androidx.appcompat:appcompat:1.0.0"
-    implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha2"
+    implementation "androidx.appcompat:appcompat:1.0.2"
+    implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha3"
     implementation "com.google.android.material:material:1.0.0"
 
     // Navigation
-    implementation "android.arch.navigation:navigation-fragment-ktx:1.0.0-alpha06"
-    implementation "android.arch.navigation:navigation-ui-ktx:1.0.0-alpha06"
+    implementation "android.arch.navigation:navigation-fragment-ktx:1.0.0-alpha11"
+    implementation "android.arch.navigation:navigation-ui-ktx:1.0.0-alpha11"
 
     // Room
     implementation "androidx.room:room-runtime:2.0.0"
