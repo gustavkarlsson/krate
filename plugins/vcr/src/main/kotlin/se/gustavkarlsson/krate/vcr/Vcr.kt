@@ -23,12 +23,12 @@ private sealed class Action<TapeId> {
 abstract class Vcr<State : Any, Command : Any, Result : Any, TapeId>(
     private val currentTimeMillis: () -> Long = System::currentTimeMillis
 ) : StorePlugin<State, Command, Result> {
-    private val commands = PublishSubject.create<Action<TapeId>>().toSerialized()
+    private val actions = BehaviorSubject.createDefault<Action<TapeId>>(Action.Stop()).toSerialized()
     private val playingSubject = PublishSubject.create<State>()
     private val recordingSubject = BehaviorSubject.create<State>()
 
     init {
-        commands
+        actions
             .switchMapCompletable {
                 when (it) {
                     is Action.Stop -> Completable.complete()
@@ -41,19 +41,19 @@ abstract class Vcr<State : Any, Command : Any, Result : Any, TapeId>(
     }
 
     fun stop() {
-        commands.onNext(Action.Stop())
+        actions.onNext(Action.Stop())
     }
 
     fun record(tapeId: TapeId) {
-        commands.onNext(Action.Record(tapeId, currentTimeMillis()))
+        actions.onNext(Action.Record(tapeId, currentTimeMillis()))
     }
 
     fun play(tapeId: TapeId) {
-        commands.onNext(Action.Play(tapeId))
+        actions.onNext(Action.Play(tapeId))
     }
 
     fun erase(tapeId: TapeId) {
-        commands.onNext(Action.Erase(tapeId))
+        actions.onNext(Action.Erase(tapeId))
     }
 
     private fun doRecord(tapeId: TapeId, startTime: Long): Completable =
@@ -100,9 +100,9 @@ abstract class Vcr<State : Any, Command : Any, Result : Any, TapeId>(
     private inner class IgnoreIfPlaying<T> : Interceptor<T> {
         override fun invoke(items: Flowable<T>): Flowable<T> =
             items.withLatestFrom(
-                commands.toFlowable(BackpressureStrategy.LATEST),
-                BiFunction { item: T, command: Action<TapeId> ->
-                    if (command is Action.Play) Maybe.empty() else Maybe.just(item)
+                actions.toFlowable(BackpressureStrategy.LATEST),
+                BiFunction { item: T, action: Action<TapeId> ->
+                    if (action is Action.Play) Maybe.empty() else Maybe.just(item)
                 })
                 .flatMapMaybe { it }
     }
