@@ -4,6 +4,7 @@ import io.reactivex.BackpressureStrategy
 import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Maybe
+import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.functions.BiFunction
 import io.reactivex.subjects.BehaviorSubject
@@ -13,7 +14,7 @@ import se.gustavkarlsson.krate.core.dsl.StorePlugin
 import java.util.concurrent.TimeUnit
 
 private sealed class Command<TapeId> {
-    object Stop : Command<Nothing>()
+    class Stop<TapeId> : Command<TapeId>()
     data class Record<TapeId>(val tapeId: TapeId, val startTime: Long) : Command<TapeId>()
     data class Play<TapeId>(val tapeId: TapeId) : Command<TapeId>()
     data class Erase<TapeId>(val tapeId: TapeId) : Command<TapeId>()
@@ -39,6 +40,10 @@ abstract class Vcr<State : Any, TapeId>(
             .subscribe()
     }
 
+    fun stop() {
+        commands.onNext(Command.Stop())
+    }
+
     fun record(tapeId: TapeId) {
         commands.onNext(Command.Record(tapeId, currentTimeMillis()))
     }
@@ -55,27 +60,31 @@ abstract class Vcr<State : Any, TapeId>(
         startRecording(tapeId)
             .flatMapCompletable { recording ->
                 recordingSubject
-                    .doOnNext { state ->
+                    .map { state ->
                         val timestamp = currentTimeMillis() - startTime
-                        val sample = Sample(state, timestamp)
-                        recording.write(sample)
+                        Sample(state, timestamp)
                     }
+                    .doOnNext(recording.input)
                     .doOnDispose(recording::dispose)
                     .ignoreElements()
             }
 
     private fun doPlay(tapeId: TapeId): Completable =
         startPlaying(tapeId)
-            .delay { Flowable.timer(it.timestamp, TimeUnit.MILLISECONDS) }
-            .map { it.state }
-            .doOnNext(playingSubject::onNext)
-            .ignoreElements()
+            .flatMapCompletable { playback ->
+                Observable.fromIterable(playback.output)
+                    .delay { Observable.timer(it.timestamp, TimeUnit.MILLISECONDS) }
+                    .map { it.state }
+                    .doOnNext(playingSubject::onNext)
+                    .doOnDispose(playback::dispose)
+                    .ignoreElements()
+            }
 
     private fun doErase(tapeId: TapeId): Completable = eraseTape(tapeId)
 
     protected abstract fun startRecording(tapeId: TapeId): Single<Recording<State>>
 
-    protected abstract fun startPlaying(tapeId: TapeId): Flowable<Sample<State>>
+    protected abstract fun startPlaying(tapeId: TapeId): Single<Playback<State>>
 
     protected abstract fun eraseTape(tapeId: TapeId): Completable
 
