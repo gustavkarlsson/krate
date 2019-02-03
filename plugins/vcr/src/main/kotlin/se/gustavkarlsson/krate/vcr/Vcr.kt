@@ -13,17 +13,17 @@ import se.gustavkarlsson.krate.core.Interceptor
 import se.gustavkarlsson.krate.core.dsl.StorePlugin
 import java.util.concurrent.TimeUnit
 
-private sealed class Command<TapeId> {
-    class Stop<TapeId> : Command<TapeId>()
-    data class Record<TapeId>(val tapeId: TapeId, val startTime: Long) : Command<TapeId>()
-    data class Play<TapeId>(val tapeId: TapeId) : Command<TapeId>()
-    data class Erase<TapeId>(val tapeId: TapeId) : Command<TapeId>()
+private sealed class Action<TapeId> {
+    class Stop<TapeId> : Action<TapeId>()
+    data class Record<TapeId>(val tapeId: TapeId, val startTime: Long) : Action<TapeId>()
+    data class Play<TapeId>(val tapeId: TapeId) : Action<TapeId>()
+    data class Erase<TapeId>(val tapeId: TapeId) : Action<TapeId>()
 }
 
-abstract class Vcr<State : Any, TapeId>(
+abstract class Vcr<State : Any, Command : Any, Result : Any, TapeId>(
     private val currentTimeMillis: () -> Long = System::currentTimeMillis
-) : StorePlugin<State, Any, Any> {
-    private val commands = PublishSubject.create<Command<TapeId>>().toSerialized()
+) : StorePlugin<State, Command, Result> {
+    private val commands = PublishSubject.create<Action<TapeId>>().toSerialized()
     private val playingSubject = PublishSubject.create<State>()
     private val recordingSubject = BehaviorSubject.create<State>()
 
@@ -31,29 +31,29 @@ abstract class Vcr<State : Any, TapeId>(
         commands
             .switchMapCompletable {
                 when (it) {
-                    is Command.Stop -> Completable.complete()
-                    is Command.Record -> doRecord(it.tapeId, it.startTime)
-                    is Command.Play -> doPlay(it.tapeId)
-                    is Command.Erase -> doErase(it.tapeId)
+                    is Action.Stop -> Completable.complete()
+                    is Action.Record -> doRecord(it.tapeId, it.startTime)
+                    is Action.Play -> doPlay(it.tapeId)
+                    is Action.Erase -> doErase(it.tapeId)
                 }
             }
             .subscribe()
     }
 
     fun stop() {
-        commands.onNext(Command.Stop())
+        commands.onNext(Action.Stop())
     }
 
     fun record(tapeId: TapeId) {
-        commands.onNext(Command.Record(tapeId, currentTimeMillis()))
+        commands.onNext(Action.Record(tapeId, currentTimeMillis()))
     }
 
     fun play(tapeId: TapeId) {
-        commands.onNext(Command.Play(tapeId))
+        commands.onNext(Action.Play(tapeId))
     }
 
     fun erase(tapeId: TapeId) {
-        commands.onNext(Command.Erase(tapeId))
+        commands.onNext(Action.Erase(tapeId))
     }
 
     private fun doRecord(tapeId: TapeId, startTime: Long): Completable =
@@ -88,10 +88,10 @@ abstract class Vcr<State : Any, TapeId>(
 
     protected abstract fun eraseTape(tapeId: TapeId): Completable
 
-    override fun changeCommandInterceptors(interceptors: List<Interceptor<Any>>): List<Interceptor<Any>> =
+    override fun changeCommandInterceptors(interceptors: List<Interceptor<Command>>): List<Interceptor<Command>> =
         interceptors + IgnoreIfPlaying()
 
-    override fun changeResultInterceptors(interceptors: List<Interceptor<Any>>): List<Interceptor<Any>> =
+    override fun changeResultInterceptors(interceptors: List<Interceptor<Result>>): List<Interceptor<Result>> =
         interceptors + IgnoreIfPlaying()
 
     override fun changeStateInterceptors(interceptors: List<Interceptor<State>>): List<Interceptor<State>> =
@@ -101,8 +101,8 @@ abstract class Vcr<State : Any, TapeId>(
         override fun invoke(items: Flowable<T>): Flowable<T> =
             items.withLatestFrom(
                 commands.toFlowable(BackpressureStrategy.LATEST),
-                BiFunction { item: T, command: Command<TapeId> ->
-                    if (command is Command.Play) Maybe.empty() else Maybe.just(item)
+                BiFunction { item: T, command: Action<TapeId> ->
+                    if (command is Action.Play) Maybe.empty() else Maybe.just(item)
                 })
                 .flatMapMaybe { it }
     }

@@ -8,9 +8,9 @@ import se.gustavkarlsson.krate.vcr.Recording
 import se.gustavkarlsson.krate.vcr.Sample
 import se.gustavkarlsson.krate.vcr.Vcr
 
-class InMemoryVcr<State : Any>(
+class InMemoryVcr<State : Any, Command : Any, Result : Any>(
     private val shelf: MutableMap<String, List<Sample<State>>> = hashMapOf()
-) : Vcr<State, String>() {
+) : Vcr<State, Command, Result, String>() {
 
     override fun startRecording(tapeId: String): Single<Recording<State>> {
         if (shelf[tapeId] != null) return Single.error(IllegalArgumentException("Tape already exists: $tapeId"))

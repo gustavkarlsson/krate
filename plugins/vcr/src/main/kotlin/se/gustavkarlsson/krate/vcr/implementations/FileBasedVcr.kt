@@ -12,7 +12,9 @@ import java.io.DataOutputStream
 import java.io.File
 import java.nio.file.Files
 
-class FileBasedVcr<State : Any>(private val serializer: Serializer<State>) : Vcr<State, File>() {
+class FileBasedVcr<State : Any, Command : Any, Result : Any>(
+    private val serializer: Serializer<State>
+) : Vcr<State, Command, Result, File>() {
 
     interface Serializer<State> {
         fun serialize(sample: Sample<State>): ByteArray
