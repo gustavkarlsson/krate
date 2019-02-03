@@ -2,6 +2,7 @@ package se.gustavkarlsson.krate.samples.android.gui
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.ui.setupActionBarWithNavController
 import io.reactivex.disposables.CompositeDisposable
@@ -14,9 +15,8 @@ class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainViewModel by inject()
 
-    private val navController by lazy {
-        findNavController(R.id.mainNavHost)
-    }
+    private val navController: NavController
+        get() = findNavController(R.id.mainNavHost)
 
     override fun onSupportNavigateUp(): Boolean = navController.navigateUp()
 
@@ -24,14 +24,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setupActionBarWithNavController(navController)
-        viewModel.bind()
         bind()
-    }
-
-    private fun MainViewModel.bind() {
-        disposables.add(navigateToEditNote.subscribe {
-            navController.navigate(R.id.action_notesFragment_to_editNoteFragment)
-        })
     }
 
     private fun bind() {

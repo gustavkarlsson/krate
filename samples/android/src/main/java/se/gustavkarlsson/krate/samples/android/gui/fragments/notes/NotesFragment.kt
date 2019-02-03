@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.OrientationHelper
@@ -51,9 +52,16 @@ class NotesFragment : Fragment() {
 
     private fun bind() {
         disposables.add(addFab.clicks()
-            .subscribe { viewModel.onAddNoteClicked() })
+            .subscribe {
+                viewModel.onAddNoteClicked()
+                findNavController().navigate(R.id.action_notesFragment_to_editNoteFragment)
+            })
 
-        noteListAdapter.onClick = viewModel::onNoteClicked
+        noteListAdapter.onClick = {
+            viewModel.onNoteClicked(it)
+            findNavController().navigate(R.id.action_notesFragment_to_editNoteFragment)
+        }
+
         noteListAdapter.onSwipe = viewModel::onNoteSwiped
     }
 
