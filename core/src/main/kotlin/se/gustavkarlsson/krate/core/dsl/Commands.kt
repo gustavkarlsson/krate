@@ -38,7 +38,7 @@ internal constructor() {
      * @param transformer the transformer function
      */
     inline fun <reified C : Command> transformWithState(noinline transformer: StateAwareTransformer<State, C, Result>) {
-        transformAllWithState(TypedTransformer(C::class, transformer))
+        transformAllWithState(TypedTransformer(C::class.java, transformer))
     }
 
     /**
@@ -94,6 +94,6 @@ internal constructor() {
      * @param watcher the watcher function
      */
     inline fun <reified C : Command> watch(noinline watcher: Watcher<C>) {
-        watchAll(TypedWatcher(C::class, watcher))
+        watchAll(TypedWatcher(C::class.java, watcher))
     }
 }
