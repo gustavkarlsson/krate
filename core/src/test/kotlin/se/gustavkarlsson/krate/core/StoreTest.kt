@@ -21,16 +21,16 @@ class StoreTest {
 
     private val newState = NotesState(listOf(Note(text)))
 
-    private val mockTransformer1 = mock<StateAwareTransformer<NotesState, NotesCommand, NotesResult>> {
-        on(it.invoke(any(), any())).thenAnswer {
+    private val mockTransformer1 = mock<Transformer< NotesCommand, NotesResult>> {
+        on(it.invoke(any())).thenAnswer {
             val commands = it.arguments[0] as Flowable<*>
             commands
                 .flatMap { Flowable.empty<NotesResult>() }
         }
     }
 
-    private val mockTransformer2 = mock<StateAwareTransformer<NotesState, NotesCommand, NotesResult>> {
-        on(it.invoke(any(), any())).thenAnswer {
+    private val mockTransformer2 = mock<Transformer< NotesCommand, NotesResult>> {
+        on(it.invoke(any())).thenAnswer {
             val commands = it.arguments[0] as Flowable<*>
             commands
                 .ofType(CreateNote::class.java)
@@ -85,7 +85,7 @@ class StoreTest {
     private val testScheduler = TestScheduler()
 
     private val impl = Store(
-        initialState,
+        StateDelegate(initialState),
         listOf(mockTransformer1, mockTransformer2),
         mockReducer,
         listOf(mockCommandInterceptor1, mockCommandInterceptor2),
@@ -163,8 +163,8 @@ class StoreTest {
     @Test
     fun `transformers are called in order`() {
         inOrder(mockTransformer1, mockTransformer2) {
-            verify(mockTransformer1).invoke(any(), any())
-            verify(mockTransformer2).invoke(any(), any())
+            verify(mockTransformer1).invoke(any())
+            verify(mockTransformer2).invoke(any())
         }
     }
 

@@ -10,24 +10,24 @@ import org.junit.Test
 
 class CompositeTransformerTest {
 
-    private val mockTransformer1 = mock<StateAwareTransformer<Long, Boolean, Int>> {
-        on(it.invoke(any(), any())).thenAnswer {
+    private val mockTransformer1 = mock<Transformer<Boolean, Int>> {
+        on(it.invoke(any())).thenAnswer {
             (it.arguments[0] as Flowable<*>)
                 .map { 1 }
         }
     }
-    private val mockTransformer2 = mock<StateAwareTransformer<Long, Boolean, Int>> {
-        on(it.invoke(any(), any())).thenAnswer {
+    private val mockTransformer2 = mock<Transformer<Boolean, Int>> {
+        on(it.invoke(any())).thenAnswer {
             (it.arguments[0] as Flowable<*>)
                 .flatMap { Flowable.just(2, 3) }
         }
     }
 
-    private val impl = CompositeTransformer(listOf(mockTransformer1, mockTransformer2)) { 0 }
+    private val impl = CompositeTransformer(listOf(mockTransformer1, mockTransformer2))
 
     @Test
     fun `no transformers results in empty stream`() {
-        val impl = CompositeTransformer<Long, Boolean, Int>(emptyList()) { 0 }
+        val impl = CompositeTransformer<Boolean, Int>(emptyList())
 
         val results = impl.invoke(Flowable.just(true))
 
@@ -42,8 +42,8 @@ class CompositeTransformerTest {
             .subscribe()
 
         inOrder(mockTransformer1, mockTransformer2) {
-            verify(mockTransformer1).invoke(any(), any())
-            verify(mockTransformer2).invoke(any(), any())
+            verify(mockTransformer1).invoke(any())
+            verify(mockTransformer2).invoke(any())
         }
     }
 
