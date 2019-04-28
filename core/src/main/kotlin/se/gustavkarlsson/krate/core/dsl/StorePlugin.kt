@@ -9,7 +9,8 @@ interface StorePlugin<State : Any, Command : Any, Result : Any> {
     fun changeInitialState(initialState: State?): State? = initialState
 
     fun changeTransformers(
-        transformers: List<Transformer<Command, Result>>, getState: () -> State
+        transformers: List<Transformer<Command, Result>>,
+        getState: () -> State
     ): List<Transformer<Command, Result>> = transformers
 
     fun changeReducer(reducer: Reducer<State, Result>?): Reducer<State, Result>? = reducer
