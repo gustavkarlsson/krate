@@ -36,7 +36,7 @@ internal constructor() {
      * @param transformer the transformer function
      */
     inline fun <reified C : Command> transform(noinline transformer: Transformer<C, Result>) {
-        transformAll(TypedTransformer(C::class, transformer))
+        transformAll(TypedTransformer(C::class.java, transformer))
     }
 
     /**

@@ -39,7 +39,7 @@ class IfObjectInstanceOfTest {
     @Test
     fun `matching subtype is consumed`() {
         var consumed = false
-        "test".ifObjectInstanceOf(CharSequence::class) {
+        "test".ifObjectInstanceOf(CharSequence::class.java) {
             consumed = true
         }
         assert(consumed).isTrue()
