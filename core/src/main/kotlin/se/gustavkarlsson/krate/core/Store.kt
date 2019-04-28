@@ -17,8 +17,8 @@ import io.reactivex.subjects.PublishSubject
  */
 class Store<State : Any, Command : Any, Result : Any>
 internal constructor(
-    initialState: State,
-    internal val transformers: List<StateAwareTransformer<State, Command, Result>>,
+    stateDelegate: StateDelegate<State>,
+    internal val transformers: List<Transformer<Command, Result>>,
     internal val reducer: Reducer<State, Result>,
     internal val commandInterceptors: List<Interceptor<Command>>,
     internal val resultInterceptors: List<Interceptor<Result>>,
@@ -29,8 +29,7 @@ internal constructor(
     /**
      * The current state of the store
      */
-    @Volatile
-    var currentState: State = initialState
+    var currentState by stateDelegate
         private set
 
     /**
@@ -59,7 +58,7 @@ internal constructor(
     }
 
     private fun Flowable<Command>.transformToResults(): Flowable<Result> {
-        return compose(CompositeTransformer(transformers, ::currentState))
+        return compose(CompositeTransformer(transformers))
     }
 
     private fun Flowable<Result>.reduceToStates(): Flowable<State> {

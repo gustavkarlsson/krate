@@ -4,14 +4,14 @@ import io.reactivex.Flowable
 import se.gustavkarlsson.krate.core.dsl.buildStore
 import se.gustavkarlsson.krate.samples.lanterna.api.github
 
-val store = buildStore<State, Command, Result> {
+val store = buildStore<State, Command, Result> { getState ->
 
     states {
         initial = State()
     }
 
     commands {
-        transformWithState<Command.LoadMoreRepos> { commands, getState ->
+        transform<Command.LoadMoreRepos> { commands ->
             commands.flatMap {
                 val state = getState()
                 if (state.isLoadingNewRepos) {
@@ -31,7 +31,7 @@ val store = buildStore<State, Command, Result> {
             }
         }
 
-        transformWithState<Command.LoadRepoDetails> { commands, getState ->
+        transform<Command.LoadRepoDetails> { commands ->
             commands.switchMap {
                 val repo = getState().repos[it.index]
                 github.getRepo(repo.owner.login, repo.name)

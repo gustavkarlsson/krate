@@ -9,11 +9,17 @@ class StoreLogger<State : Any, Command : Any, Result : Any>(
     private val stateLogger: ((State) -> Unit)? = null
 ) : StorePlugin<State, Command, Result> {
 
-    override fun changeCommandInterceptors(interceptors: List<Interceptor<Command>>): List<Interceptor<Command>> {
+    override fun changeCommandInterceptors(
+        interceptors: List<Interceptor<Command>>,
+        getState: () -> State
+    ): List<Interceptor<Command>> {
         return interceptors.appendIfNotNull(commandLogger)
     }
 
-    override fun changeResultInterceptors(interceptors: List<Interceptor<Result>>): List<Interceptor<Result>> {
+    override fun changeResultInterceptors(
+        interceptors: List<Interceptor<Result>>,
+        getState: () -> State
+    ): List<Interceptor<Result>> {
         return interceptors.appendIfNotNull(resultLogger)
     }
 

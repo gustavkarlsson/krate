@@ -16,4 +16,19 @@ class BuildStoreTest {
 
         assert(store.currentState).isEqualTo(5)
     }
+
+    @Test
+    fun `getState gets the current state2`() {
+        val store = buildStore<List<Int>, Int, List<Int>> { getState ->
+            states {
+                initial = listOf(0)
+                initial = getState() + 1
+            }
+            commands { transformAll { commands -> commands.map { getState() + it } } }
+            results { reduce { _, result -> result } }
+        }
+        store.issue(2)
+
+        assert(store.currentState).isEqualTo(listOf(0, 1, 2))
+    }
 }

@@ -3,17 +3,22 @@ package se.gustavkarlsson.krate.core.dsl
 import io.reactivex.Scheduler
 import se.gustavkarlsson.krate.core.Interceptor
 import se.gustavkarlsson.krate.core.Reducer
-import se.gustavkarlsson.krate.core.StateAwareTransformer
+import se.gustavkarlsson.krate.core.StateDelegate
 import se.gustavkarlsson.krate.core.Store
+import se.gustavkarlsson.krate.core.Transformer
 
 /**
  * A configuration block for a [Store].
  */
 @StoreDsl
 class StoreBuilder<State : Any, Command : Any, Result : Any>
-internal constructor() {
-    private var initialState: State? = null
-    private var transformers = mutableListOf<StateAwareTransformer<State, Command, Result>>()
+internal constructor(private val stateDelegate: StateDelegate<State>) {
+    private var initialState: State?
+        get() = stateDelegate.value
+        set(value) {
+            stateDelegate.value = value
+        }
+    private var transformers = mutableListOf<Transformer<Command, Result>>()
     private var reducer: Reducer<State, Result>? = null
     private var commandInterceptors = mutableListOf<Interceptor<Command>>()
     private var resultInterceptors = mutableListOf<Interceptor<Result>>()
@@ -27,8 +32,8 @@ internal constructor() {
      *
      * @param block the code used to configure commands
      */
-    fun commands(block: Commands<State, Command, Result>.() -> Unit) {
-        Commands<State, Command, Result>()
+    fun commands(block: Commands<Command, Result>.() -> Unit) {
+        Commands<Command, Result>()
             .also(block)
             .let {
                 transformers.addAll(it.transformers)
@@ -60,7 +65,7 @@ internal constructor() {
      * @param block the code used to configure states
      */
     fun states(block: States<State>.() -> Unit) {
-        States(initialState, observeScheduler)
+        States(stateDelegate, observeScheduler)
             .also(block)
             .let {
                 initialState = it.initial
@@ -77,24 +82,26 @@ internal constructor() {
     fun plugin(plugin: StorePlugin<State, Command, Result>) {
         plugin.run {
             initialState = changeInitialState(initialState)
-            transformers = changeTransformers(transformers).toMutableList()
+            transformers = changeTransformers(transformers, stateDelegate::valueUnsafe).toMutableList()
             reducer = changeReducer(reducer)
-            commandInterceptors = changeCommandInterceptors(commandInterceptors).toMutableList()
-            resultInterceptors = changeResultInterceptors(resultInterceptors).toMutableList()
+            commandInterceptors =
+                changeCommandInterceptors(commandInterceptors, stateDelegate::valueUnsafe).toMutableList()
+            resultInterceptors =
+                changeResultInterceptors(resultInterceptors, stateDelegate::valueUnsafe).toMutableList()
             stateInterceptors = changeStateInterceptors(stateInterceptors).toMutableList()
             observeScheduler = changeObserveScheduler(observeScheduler)
         }
     }
 
     internal fun build(): Store<State, Command, Result> {
-        val initialState = checkNotNull(initialState) {
+        checkNotNull(stateDelegate.value) {
             "No initial state set. Set the initial state in a states-block in the DSL"
         }
         val reducer = checkNotNull(reducer) {
             "No reducer set. Set the reducer in a result-block in the DSL"
         }
         return Store(
-            initialState,
+            stateDelegate,
             transformers,
             reducer,
             commandInterceptors,
