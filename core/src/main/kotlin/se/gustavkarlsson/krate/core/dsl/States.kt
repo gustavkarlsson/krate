@@ -2,6 +2,7 @@ package se.gustavkarlsson.krate.core.dsl
 
 import io.reactivex.Scheduler
 import se.gustavkarlsson.krate.core.Interceptor
+import se.gustavkarlsson.krate.core.StateDelegate
 import se.gustavkarlsson.krate.core.Watcher
 import se.gustavkarlsson.krate.core.WatchingInterceptor
 
@@ -11,10 +12,7 @@ import se.gustavkarlsson.krate.core.WatchingInterceptor
 @StoreDsl
 class States<State : Any>
 internal constructor(
-    /**
-     * The initial state of the store.
-     */
-    var initial: State? = null,
+    private val stateDelegate: StateDelegate<State>,
 
     /**
      * An optional scheduler that will be used to observe state changes.
@@ -23,6 +21,16 @@ internal constructor(
      */
     var observeScheduler: Scheduler? = null
 ) {
+
+    /**
+     * The initial state of the store.
+     */
+    var initial: State?
+        get() = stateDelegate.value
+        set(value) {
+            stateDelegate.value = value
+        }
+
     internal val interceptors = mutableListOf<Interceptor<State>>()
 
     /**

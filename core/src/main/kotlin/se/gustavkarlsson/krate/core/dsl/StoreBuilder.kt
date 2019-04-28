@@ -15,7 +15,9 @@ class StoreBuilder<State : Any, Command : Any, Result : Any>
 internal constructor(private val stateDelegate: StateDelegate<State>) {
     private var initialState: State?
         get() = stateDelegate.value
-        set(value) { stateDelegate.value = value }
+        set(value) {
+            stateDelegate.value = value
+        }
     private var transformers = mutableListOf<Transformer<Command, Result>>()
     private var reducer: Reducer<State, Result>? = null
     private var commandInterceptors = mutableListOf<Interceptor<Command>>()
@@ -63,7 +65,7 @@ internal constructor(private val stateDelegate: StateDelegate<State>) {
      * @param block the code used to configure states
      */
     fun states(block: States<State>.() -> Unit) {
-        States(initialState, observeScheduler)
+        States(stateDelegate, observeScheduler)
             .also(block)
             .let {
                 initialState = it.initial

@@ -160,9 +160,4 @@ class StoreBuilderTest {
 
         builder.build()
     }
-
-    @Test
-    fun `using state delegate`() {
-        TODO()
-    }
 }
