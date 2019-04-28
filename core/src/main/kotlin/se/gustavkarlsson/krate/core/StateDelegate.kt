@@ -7,7 +7,7 @@ internal class StateDelegate<T : Any>(
     @Volatile internal var value: T? = null
 ) : ReadWriteProperty<Any, T> {
 
-    internal val valueUnsafe: T get() = requireNotNull(value) { "state has not been set" }
+    internal val valueUnsafe: T get() = checkNotNull(value) { "state has not been set" }
 
     override fun getValue(thisRef: Any, property: KProperty<*>): T = valueUnsafe
 
