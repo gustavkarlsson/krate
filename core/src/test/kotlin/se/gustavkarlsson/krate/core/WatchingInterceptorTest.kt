@@ -1,5 +1,7 @@
 package se.gustavkarlsson.krate.core
 
+import assertk.assert
+import assertk.assertions.containsExactly
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import io.reactivex.Flowable
@@ -27,9 +29,8 @@ class WatchingInterceptorTest {
     fun `returned stream is unchanged`() {
         val stream = Flowable.just(5)
 
-        val observer = impl(stream).test()
+        val results = impl(stream).blockingList()
 
-        observer.assertValue(5)
-        observer.assertComplete()
+        assert(results).containsExactly(5)
     }
 }

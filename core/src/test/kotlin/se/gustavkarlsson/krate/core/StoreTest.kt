@@ -22,16 +22,15 @@ class StoreTest {
     private val newState = NotesState(listOf(Note(text)))
 
     private val mockTransformer1 = mock<Transformer< NotesCommand, NotesResult>> {
-        on(it.invoke(any())).thenAnswer {
-            val commands = it.arguments[0] as Flowable<*>
-            commands
-                .flatMap { Flowable.empty<NotesResult>() }
+        on(it.invoke(any())).thenAnswer { invocation ->
+            val commands = invocation.arguments[0] as Flowable<*>
+            commands.flatMap { Flowable.empty<NotesResult>() }
         }
     }
 
     private val mockTransformer2 = mock<Transformer< NotesCommand, NotesResult>> {
-        on(it.invoke(any())).thenAnswer {
-            val commands = it.arguments[0] as Flowable<*>
+        on(it.invoke(any())).thenAnswer { invocation ->
+            val commands = invocation.arguments[0] as Flowable<*>
             commands
                 .ofType(CreateNote::class.java)
                 .map { transformer2Result }
@@ -39,46 +38,46 @@ class StoreTest {
     }
 
     private val mockReducer = mock<Reducer<NotesState, NotesResult>> {
-        on(it.invoke(any(), any())).thenAnswer {
-            val state = it.arguments[0] as NotesState
-            val result = it.arguments[1] as NoteCreated
+        on(it.invoke(any(), any())).thenAnswer { invocation ->
+            val state = invocation.arguments[0] as NotesState
+            val result = invocation.arguments[1] as NoteCreated
             NotesState(state.notes + result.note)
         }
     }
 
     private val mockCommandInterceptor1 = mock<Interceptor<NotesCommand>> {
-        on(it.invoke(any())).thenAnswer {
-            it.arguments[0]
+        on(it.invoke(any())).thenAnswer { invocation ->
+            invocation.arguments[0]
         }
     }
 
     private val mockCommandInterceptor2 = mock<Interceptor<NotesCommand>> {
-        on(it.invoke(any())).thenAnswer {
-            it.arguments[0]
+        on(it.invoke(any())).thenAnswer { invocation ->
+            invocation.arguments[0]
         }
     }
 
     private val mockResultInterceptor1 = mock<Interceptor<NotesResult>> {
-        on(it.invoke(any())).thenAnswer {
-            it.arguments[0]
+        on(it.invoke(any())).thenAnswer { invocation ->
+            invocation.arguments[0]
         }
     }
 
     private val mockResultInterceptor2 = mock<Interceptor<NotesResult>> {
-        on(it.invoke(any())).thenAnswer {
-            it.arguments[0]
+        on(it.invoke(any())).thenAnswer { invocation ->
+            invocation.arguments[0]
         }
     }
 
     private val mockStateInterceptor1 = mock<Interceptor<NotesState>> {
-        on(it.invoke(any())).thenAnswer {
-            it.arguments[0]
+        on(it.invoke(any())).thenAnswer { invocation ->
+            invocation.arguments[0]
         }
     }
 
     private val mockStateInterceptor2 = mock<Interceptor<NotesState>> {
-        on(it.invoke(any())).thenAnswer {
-            it.arguments[0]
+        on(it.invoke(any())).thenAnswer { invocation ->
+            invocation.arguments[0]
         }
     }
 

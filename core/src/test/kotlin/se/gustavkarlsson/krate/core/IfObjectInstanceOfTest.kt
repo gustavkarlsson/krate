@@ -37,6 +37,15 @@ class IfObjectInstanceOfTest {
     }
 
     @Test
+    fun `matching subtype is consumed`() {
+        var consumed = false
+        "test".ifObjectInstanceOf(CharSequence::class) {
+            consumed = true
+        }
+        assert(consumed).isTrue()
+    }
+
+    @Test
     fun `matching type returns value`() {
         val result = "test".ifObjectInstanceOf(String::class) {
             Unit

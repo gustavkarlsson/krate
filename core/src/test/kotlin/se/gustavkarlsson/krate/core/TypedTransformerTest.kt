@@ -14,14 +14,14 @@ class TypedTransformerTest {
 
     @Test
     fun `non matching type will be ignored`() {
-        val result = impl(Flowable.just(2.0)).blockingIterable().toList()
+        val result = impl(Flowable.just(2.0)).blockingList()
 
         assert(result).isEmpty()
     }
 
     @Test
     fun `matching type will be consumed`() {
-        val result = impl(Flowable.just(2)).blockingIterable().toList()
+        val result = impl(Flowable.just(2)).blockingList()
 
         assert(result).containsExactly(-2L)
     }
