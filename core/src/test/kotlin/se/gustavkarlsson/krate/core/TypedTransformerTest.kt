@@ -8,7 +8,7 @@ import org.junit.Test
 
 class TypedTransformerTest {
 
-    private val impl = TypedTransformer<Number, Long, Int>(Int::class) { commands ->
+    private val impl = TypedTransformer<Number, Long, Int>(Int::class.javaObjectType) { commands ->
         commands.map { -it.toLong() }
     }
 

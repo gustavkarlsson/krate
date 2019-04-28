@@ -56,6 +56,6 @@ internal constructor() {
      * @param watcher the watcher function
      */
     inline fun <reified R : Result> watch(noinline watcher: Watcher<R>) {
-        watchAll(TypedWatcher(R::class, watcher))
+        watchAll(TypedWatcher(R::class.java, watcher))
     }
 }

@@ -8,7 +8,7 @@ import org.junit.Test
 class TypedWatcherTest {
 
     private var consumed = false
-    private val impl = TypedWatcher<Number, Int>(Int::class) {
+    private val impl = TypedWatcher<Number, Int>(Int::class.javaObjectType) {
         consumed = true
     }
 
