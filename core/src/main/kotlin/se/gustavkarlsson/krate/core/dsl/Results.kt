@@ -2,6 +2,7 @@ package se.gustavkarlsson.krate.core.dsl
 
 import se.gustavkarlsson.krate.core.Interceptor
 import se.gustavkarlsson.krate.core.Reducer
+import se.gustavkarlsson.krate.core.TypedReducer
 import se.gustavkarlsson.krate.core.TypedWatcher
 import se.gustavkarlsson.krate.core.Watcher
 import se.gustavkarlsson.krate.core.WatchingInterceptor
@@ -12,18 +13,30 @@ import se.gustavkarlsson.krate.core.WatchingInterceptor
 @StoreDsl
 class Results<State : Any, Result : Any>
 internal constructor() {
-    internal var reducer: Reducer<State, Result>? = null
+    internal val reducers = mutableListOf<Reducer<State, Result>>()
     internal val interceptors = mutableListOf<Interceptor<Result>>()
 
     /**
-     * Sets the reducer for the store.
+     * Adds a reducer to the store.
      *
      * A reducer takes the current state of the store and a result to produce a new state.
      *
      * @param reducer the reducer function
      */
-    fun reduce(reducer: Reducer<State, Result>) {
-        this.reducer = reducer
+    fun reduceAll(reducer: Reducer<State, Result>) {
+        reducers += reducer
+    }
+
+    /**
+     * Adds a typed reducer to the store.
+     *
+     * A typed reducer takes the current state of the store and a result of type [R] to produce a new state.
+     *
+     * @param R the type of result to reduce
+     * @param reducer the reducer function
+     */
+    inline fun <reified R : Result> reduce(noinline reducer: Reducer<State, R>) {
+        reduceAll(TypedReducer(R::class.java, reducer))
     }
 
     /**
