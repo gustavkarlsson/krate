@@ -19,7 +19,7 @@ internal constructor(private val stateDelegate: StateDelegate<State>) {
             stateDelegate.value = value
         }
     private var transformers = mutableListOf<Transformer<Command, Result>>()
-    private var reducer: Reducer<State, Result>? = null
+    private var reducers = mutableListOf<Reducer<State, Result>>()
     private var commandInterceptors = mutableListOf<Interceptor<Command>>()
     private var resultInterceptors = mutableListOf<Interceptor<Result>>()
     private var stateInterceptors = mutableListOf<Interceptor<State>>()
@@ -28,7 +28,7 @@ internal constructor(private val stateDelegate: StateDelegate<State>) {
     /**
      * Configures commands for the store.
      *
-     * At least one transformer must be defined.
+     * At least one transformer should be defined.
      *
      * @param block the code used to configure commands
      */
@@ -44,7 +44,7 @@ internal constructor(private val stateDelegate: StateDelegate<State>) {
     /**
      * Configures results for the store.
      *
-     * The reducer must be defined.
+     * At least one reducer should be defined.
      *
      * @param block the code used to configure results
      */
@@ -52,7 +52,7 @@ internal constructor(private val stateDelegate: StateDelegate<State>) {
         Results<State, Result>()
             .also(block)
             .let {
-                reducer = it.reducer
+                reducers.addAll(it.reducers)
                 resultInterceptors.addAll(it.interceptors)
             }
     }
@@ -83,7 +83,7 @@ internal constructor(private val stateDelegate: StateDelegate<State>) {
         plugin.run {
             initialState = changeInitialState(initialState)
             transformers = changeTransformers(transformers, stateDelegate::valueUnsafe).toMutableList()
-            reducer = changeReducer(reducer)
+            reducers = changeReducers(reducers).toMutableList()
             commandInterceptors =
                 changeCommandInterceptors(commandInterceptors, stateDelegate::valueUnsafe).toMutableList()
             resultInterceptors =
@@ -97,13 +97,10 @@ internal constructor(private val stateDelegate: StateDelegate<State>) {
         checkNotNull(stateDelegate.value) {
             "No initial state set. Set the initial state in a states-block in the DSL"
         }
-        val reducer = checkNotNull(reducer) {
-            "No reducer set. Set the reducer in a result-block in the DSL"
-        }
         return Store(
             stateDelegate,
             transformers,
-            reducer,
+            reducers,
             commandInterceptors,
             resultInterceptors,
             stateInterceptors,

@@ -19,7 +19,7 @@ class Store<State : Any, Command : Any, Result : Any>
 internal constructor(
     stateDelegate: StateDelegate<State>,
     internal val transformers: List<Transformer<Command, Result>>,
-    internal val reducer: Reducer<State, Result>,
+    internal val reducers: List<Reducer<State, Result>>,
     internal val commandInterceptors: List<Interceptor<Command>>,
     internal val resultInterceptors: List<Interceptor<Result>>,
     internal val stateInterceptors: List<Interceptor<State>>,
@@ -62,7 +62,7 @@ internal constructor(
     }
 
     private fun Flowable<Result>.reduceToStates(): Flowable<State> {
-        return serialize().scanWith(::currentState, reducer)
+        return serialize().scanWith(::currentState, CompositeReducer(reducers))
     }
 
     private fun Flowable<State>.setCurrentState(): Flowable<State> {
