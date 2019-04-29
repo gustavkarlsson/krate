@@ -15,5 +15,13 @@ fun <State : Any, Command : Any, Result : Any> mergeStores(
         storeA.commandInterceptors + storeB.commandInterceptors,
         storeA.resultInterceptors + storeB.resultInterceptors,
         storeA.stateInterceptors + storeB.stateInterceptors,
-        observeScheduler = observeScheduler
+        observeScheduler
     )
+
+fun <State : Any, Command : Any, Result : Any> Store<State, Command, Result>.mergeWith(
+    otherStore: Store<State, Command, Result>
+): Store<State, Command, Result> = mergeStores(this, otherStore)
+
+operator fun <State : Any, Command : Any, Result : Any> Store<State, Command, Result>.plus(
+    otherStore: Store<State, Command, Result>
+): Store<State, Command, Result> = mergeStores(this, otherStore)
