@@ -1,15 +1,15 @@
 package se.gustavkarlsson.krate.core
 
 /**
- * A reducer that filters results of a specified type and applies another reducer for that type to it.
+ * A reducer that filters commands of a specified type and applies the given reducer for that type to it.
  */
-class TypedReducer<State : Any, Result : Any, R : Result>(
-    private val type: Class<R>,
-    private val reduce: Reducer<State, R>
-) : Reducer<State, Result> {
+class TypedReducer<State : Any, Command : Any, C : Command>(
+    private val type: Class<C>,
+    private val reduce: Reducer<State, C>
+) : Reducer<State, Command> {
 
-    override fun invoke(state: State, result: Result): State {
-        return result.ifObjectInstanceOf(type) {
+    override fun invoke(state: State, command: Command): State {
+        return command.mapIfInstanceOf(type) {
             reduce(state, it)
         } ?: state
     }

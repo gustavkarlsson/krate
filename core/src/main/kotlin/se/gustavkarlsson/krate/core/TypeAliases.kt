@@ -2,10 +2,13 @@ package se.gustavkarlsson.krate.core
 
 import io.reactivex.Flowable
 
-typealias Transformer<Command, Result> = (Flowable<Command>) -> Flowable<Result>
+typealias Transformer<T, R> = (Flowable<T>) -> Flowable<R>
+typealias TransformerWithReceiver<T, R> = Flowable<T>.() -> Flowable<R>
 
-typealias Reducer<State, Result> = (State, Result) -> State
+typealias Reducer<State, T> = (State, T) -> State
+typealias ReducerWithReceiver<State, T> = State.(T) -> State
 
-typealias Interceptor<Type> = (Flowable<Type>) -> Flowable<Type>
+typealias Interceptor<T> = (Flowable<T>) -> Flowable<T>
+typealias InterceptorWithReceiver<T> = Flowable<T>.() -> Flowable<T>
 
-typealias Watcher<Type> = (Type) -> Unit
+typealias Watcher<T> = (T) -> Unit

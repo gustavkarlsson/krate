@@ -8,20 +8,16 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.PublishSubject
 
 /**
- * Manages state by accepting commands, transforming them into results,
- * which are then used to sequentially produce new state updates.
+ * Manages state by taking commands as input and sequentially producing new state updates.
  *
  * @param State The type representing the state of the store
- * @param Command Commands are issued to produce results
- * @param Result The result of a command used to produce a new state
+ * @param Command Commands are issued to update the state
  */
-class Store<State : Any, Command : Any, Result : Any>
+class Store<State : Any, Command : Any>
 internal constructor(
     stateDelegate: StateDelegate<State>,
-    internal val transformers: List<Transformer<Command, Result>>,
-    internal val reducers: List<Reducer<State, Result>>,
+    internal val reducers: List<Reducer<State, Command>>,
     internal val commandInterceptors: List<Interceptor<Command>>,
-    internal val resultInterceptors: List<Interceptor<Result>>,
     internal val stateInterceptors: List<Interceptor<State>>,
     internal val observeScheduler: Scheduler?
 ) : Disposable {
@@ -45,8 +41,6 @@ internal constructor(
         .toFlowable(BackpressureStrategy.MISSING)
         .onBackpressureBuffer(true)
         .intercept(commandInterceptors)
-        .transformToResults()
-        .intercept(resultInterceptors)
         .reduceToStates()
         .intercept(stateInterceptors)
         .onBackpressureLatest()
@@ -57,12 +51,8 @@ internal constructor(
         return interceptors.fold(this) { stream, intercept -> intercept(stream) }
     }
 
-    private fun Flowable<Command>.transformToResults(): Flowable<Result> {
-        return compose(CompositeTransformer(transformers))
-    }
-
-    private fun Flowable<Result>.reduceToStates(): Flowable<State> {
-        return serialize().scanWith(::currentState, CompositeReducer(reducers))
+    private fun Flowable<Command>.reduceToStates(): Flowable<State> {
+        return serialize().scanWith(::currentState, reducers::reduceAll)
     }
 
     private fun Flowable<State>.setCurrentState(): Flowable<State> {

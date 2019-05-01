@@ -16,9 +16,11 @@ publishing {
     publications {
         maven(MavenPublication) {
             from components.java
-            artifact sourcesJar
-            artifact javadocJar
             artifactId = "krate-logger"
+            afterEvaluate {
+                artifact sourcesJar
+                artifact javadocJar
+            }
         }
     }
 }

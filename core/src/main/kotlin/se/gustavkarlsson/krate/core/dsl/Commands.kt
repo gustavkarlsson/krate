@@ -1,8 +1,9 @@
 package se.gustavkarlsson.krate.core.dsl
 
 import se.gustavkarlsson.krate.core.Interceptor
-import se.gustavkarlsson.krate.core.Transformer
-import se.gustavkarlsson.krate.core.TypedTransformer
+import se.gustavkarlsson.krate.core.InterceptorWithReceiver
+import se.gustavkarlsson.krate.core.TransformerWithReceiver
+import se.gustavkarlsson.krate.core.TypedInterceptor
 import se.gustavkarlsson.krate.core.TypedWatcher
 import se.gustavkarlsson.krate.core.Watcher
 import se.gustavkarlsson.krate.core.WatchingInterceptor
@@ -11,32 +12,32 @@ import se.gustavkarlsson.krate.core.WatchingInterceptor
  * A configuration block for commands.
  */
 @StoreDsl
-class Commands<Command : Any, Result : Any>
+class Commands<Command : Any>
 internal constructor() {
-    internal val transformers = mutableListOf<Transformer<Command, Result>>()
     internal val interceptors = mutableListOf<Interceptor<Command>>()
 
     /**
-     * Adds a transformer to the store.
+     * Adds a typed transformer to the store.
      *
-     * A transformer converts commands to results.
+     * A transformer converts commands of type [C] to commands of type [Command], while ignoring other commands
      *
+     * @param C the type of commands to transform
      * @param transformer the transformer function
      */
-    fun transformAll(transformer: Transformer<Command, Result>) {
-        transformers += transformer
+    fun <C : Command> transformTyped(type: Class<C>, transformer: TransformerWithReceiver<C, Command>) {
+        interceptors += TypedInterceptor(type, transformer)
     }
 
     /**
      * Adds a typed transformer to the store.
      *
-     * A transformer converts commands of type [C] to results.
+     * A transformer converts commands of type [C] to commands of type [Command], while ignoring other commands
      *
      * @param C the type of commands to transform
      * @param transformer the transformer function
      */
-    inline fun <reified C : Command> transform(noinline transformer: Transformer<C, Result>) {
-        transformAll(TypedTransformer(C::class.java, transformer))
+    inline fun <reified C : Command> transform(noinline transformer: TransformerWithReceiver<C, Command>) {
+        transformTyped(C::class.java, transformer)
     }
 
     /**
@@ -46,7 +47,7 @@ internal constructor() {
      *
      * @param interceptor the interceptor function
      */
-    fun intercept(interceptor: Interceptor<Command>) {
+    fun intercept(interceptor: InterceptorWithReceiver<Command>) {
         interceptors += interceptor
     }
 

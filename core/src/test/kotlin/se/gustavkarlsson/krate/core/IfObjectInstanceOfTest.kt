@@ -12,7 +12,7 @@ class IfObjectInstanceOfTest {
     @Test
     fun `null is not consumed`() {
         var consumed = false
-        (null as String?).ifObjectInstanceOf(Any::class.java) {
+        (null as String?).mapIfInstanceOf(Any::class.java) {
             consumed = true
         }
         assert(consumed).isFalse()
@@ -21,7 +21,7 @@ class IfObjectInstanceOfTest {
     @Test
     fun `non matching type is not consumed`() {
         var consumed = false
-        "test".ifObjectInstanceOf(List::class.java) {
+        "test".mapIfInstanceOf(List::class.java) {
             consumed = true
         }
         assert(consumed).isFalse()
@@ -30,7 +30,7 @@ class IfObjectInstanceOfTest {
     @Test
     fun `matching type is consumed`() {
         var consumed = false
-        "test".ifObjectInstanceOf(String::class.java) {
+        "test".mapIfInstanceOf(String::class.java) {
             consumed = true
         }
         assert(consumed).isTrue()
@@ -39,7 +39,7 @@ class IfObjectInstanceOfTest {
     @Test
     fun `matching subtype is consumed`() {
         var consumed = false
-        "test".ifObjectInstanceOf(CharSequence::class.java) {
+        "test".mapIfInstanceOf(CharSequence::class.java) {
             consumed = true
         }
         assert(consumed).isTrue()
@@ -47,7 +47,7 @@ class IfObjectInstanceOfTest {
 
     @Test
     fun `matching type returns value`() {
-        val result = "test".ifObjectInstanceOf(String::class.java) {
+        val result = "test".mapIfInstanceOf(String::class.java) {
             Unit
         }
         assert(result).isEqualTo(Unit)
@@ -55,7 +55,7 @@ class IfObjectInstanceOfTest {
 
     @Test
     fun `non matching type returns null`() {
-        val result = "test".ifObjectInstanceOf(List::class.java) {
+        val result = "test".mapIfInstanceOf(List::class.java) {
             Unit
         }
         assert(result).isNull()

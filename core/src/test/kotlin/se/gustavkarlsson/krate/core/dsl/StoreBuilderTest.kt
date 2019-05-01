@@ -7,6 +7,7 @@ import assertk.assertions.isEqualTo
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.mock
 import io.reactivex.Scheduler
+import jdk.nashorn.internal.objects.NativeArray.reduce
 import org.junit.Test
 import se.gustavkarlsson.krate.core.CreateNote
 import se.gustavkarlsson.krate.core.Interceptor

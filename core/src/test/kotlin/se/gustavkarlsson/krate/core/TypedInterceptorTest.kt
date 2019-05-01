@@ -6,9 +6,9 @@ import assertk.assertions.isEmpty
 import io.reactivex.Flowable
 import org.junit.Test
 
-class TypedTransformerTest {
+class TypedInterceptorTest {
 
-    private val impl = TypedTransformer<Number, Long, Int>(Int::class.javaObjectType) { commands ->
+    private val impl = TypedInterceptor<Number, Long, Int>(Int::class.javaObjectType) { commands ->
         commands.map { -it.toLong() }
     }
 

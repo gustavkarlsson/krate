@@ -6,11 +6,11 @@ import se.gustavkarlsson.krate.core.Store
 /**
  * Creates a [Store] using the Krate DSL.
  */
-fun <State : Any, Command : Any, Result : Any> buildStore(
-    block: StoreBuilder<State, Command, Result>.(getState: () -> State) -> Unit
-): Store<State, Command, Result> {
+fun <State : Any, Command : Any> buildStore(
+    block: StoreBuilder<State, Command>.(getState: () -> State) -> Unit
+): Store<State, Command> {
     val stateDelegate = StateDelegate<State>()
-    return StoreBuilder<State, Command, Result>(stateDelegate)
+    return StoreBuilder<State, Command>(stateDelegate)
         .apply { block(stateDelegate::valueUnsafe) }
         .build()
 }

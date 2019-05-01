@@ -1,14 +1,14 @@
 package se.gustavkarlsson.krate.core
 
 /**
- * A watcher that filters results of a specified type and applies another watcher for that type to it.
+ * A watcher that filters elements of a specified type and applies the given watcher for that type to it.
  */
-class TypedWatcher<Type : Any, T : Type>(
+class TypedWatcher<TUpper : Any, T : TUpper>(
     private val type: Class<T>,
     private val watch: Watcher<T>
-) : Watcher<Type> {
+) : Watcher<TUpper> {
 
-    override fun invoke(value: Type) {
-        value.ifObjectInstanceOf(type, watch)
+    override fun invoke(value: TUpper) {
+        value.mapIfInstanceOf(type, watch)
     }
 }

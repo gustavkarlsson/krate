@@ -1,8 +1,6 @@
 package se.gustavkarlsson.krate.core
 
 import assertk.assert
-import assertk.assertions.containsExactly
-import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.inOrder
@@ -10,7 +8,7 @@ import com.nhaarman.mockitokotlin2.mock
 import io.reactivex.Flowable
 import org.junit.Test
 
-class CompositeTransformerTest {
+class SplittingTransformerTest {
 
     private val mockTransformer1 = mock<Transformer<Boolean, Int>> {
         on(it.invoke(any())).thenAnswer { invocation ->
@@ -25,11 +23,11 @@ class CompositeTransformerTest {
         }
     }
 
-    private val impl = CompositeTransformer(listOf(mockTransformer1, mockTransformer2))
+    private val impl = SplittingTransformer(listOf(mockTransformer1, mockTransformer2))
 
     @Test
     fun `no transformers results in empty stream`() {
-        val impl = CompositeTransformer<Boolean, Int>(emptyList())
+        val impl = SplittingTransformer<Boolean, Int>(emptyList())
 
         val results = impl.invoke(Flowable.just(true)).blockingList()
 

@@ -3,85 +3,93 @@ package se.gustavkarlsson.krate.samples.lanterna.store
 import io.reactivex.Flowable
 import se.gustavkarlsson.krate.core.dsl.buildStore
 import se.gustavkarlsson.krate.samples.lanterna.api.github
+import se.gustavkarlsson.krate.samples.lanterna.api.models.Repo
 
-val store = buildStore<State, Command, Result> { getState ->
+val store = buildStore<State, Command> { getState ->
+
+    commands {
+        transform<Command.LoadMoreRepos> {
+            flatMap {
+                val state = getState()
+                if (state.isLoadingNewRepos)
+                    Flowable.empty()
+                else
+                    loadMoreRepos(state.repos.lastOrNull()?.id)
+            }
+        }
+
+        transform<Command.LoadRepoDetails> {
+            switchMap {
+                loadRepoDetails(getState().repos[it.index])
+            }
+        }
+    }
 
     states {
         initial = State()
-    }
 
-    commands {
-        transform<Command.LoadMoreRepos> { commands ->
-            commands.flatMap {
-                val state = getState()
-                if (state.isLoadingNewRepos) {
-                    Flowable.empty<Result>()
-                } else {
-                    val lastId = state.repos.lastOrNull()?.id
-                    github.getRepos(lastId)
-                        .flatMapPublisher {
-                            Flowable.just(Result.LoadingMoreRepos(false), Result.LoadedMoreRepos(it))
-                        }
-                        .onErrorResumeNext { throwable: Throwable ->
-                            val error = throwable.message ?: "Failed to load repos"
-                            Flowable.just(Result.LoadingMoreRepos(false), Result.GotError(error))
-                        }
-                        .startWith(Result.LoadingMoreRepos(true))
-                }
-            }
+        reduce<Command.LoadingMoreRepos> {
+            copy(isLoadingNewRepos = it.isLoading)
         }
 
-        transform<Command.LoadRepoDetails> { commands ->
-            commands.switchMap {
-                val repo = getState().repos[it.index]
-                github.getRepo(repo.owner.login, repo.name)
-                    .flatMapPublisher {
-                        Flowable.just(Result.LoadingRepoDetails(false), Result.LoadedRepoDetails(it))
-                    }
-                    .onErrorResumeNext { throwable: Throwable ->
-                        val error = throwable.message ?: "Failed to load repo: ${repo.name}"
-                        Flowable.just(Result.LoadingRepoDetails(false), Result.GotError(error))
-                    }
-                    .startWith(Result.LoadingRepoDetails(true))
-            }
+        reduce<Command.LoadingRepoDetails> {
+            copy(isLoadingRepoDetails = it.isLoading)
         }
 
-        transform<Command.CloseRepoDetails> { commands ->
-            commands.map { Result.ClosedRepoDetails }
+        reduce<Command.LoadedMoreRepos> {
+            copy(repos = repos + it.repos)
         }
 
-        transform<Command.AcknowledgeError> { commands ->
-            commands.map { Result.RemovedError(it.error) }
+        reduce<Command.LoadedRepoDetails> {
+            copy(openRepo = it.repo)
+        }
+
+        reduce<Command.CloseRepoDetails> {
+            copy(openRepo = null)
+        }
+
+        reduce<Command.AddError> {
+            copy(errors = errors + it.error)
+        }
+
+        reduce<Command.RemoveError> { result ->
+            copy(errors = errors.filter { it != result.error })
         }
     }
+}
 
-    results {
-        reduce<Result.LoadingMoreRepos> { state, result ->
-            state.copy(isLoadingNewRepos = result.isLoading)
+private fun loadRepoDetails(repo: Repo): Flowable<Command> {
+    return github.getRepo(repo.owner.login, repo.name)
+        .flatMapPublisher {
+            Flowable.just(
+                Command.LoadingRepoDetails(false),
+                Command.LoadedRepoDetails(it)
+            )
         }
+        .onErrorResumeNext { throwable: Throwable ->
+            val error = throwable.message ?: "Failed to load repo: ${repo.name}"
+            Flowable.just(
+                Command.LoadingRepoDetails(false),
+                Command.AddError(error)
+            )
+        }
+        .startWith(Command.LoadingRepoDetails(true))
+}
 
-        reduce<Result.LoadingRepoDetails> { state, result ->
-            state.copy(isLoadingRepoDetails = result.isLoading)
+private fun loadMoreRepos(lastId: Long?): Flowable<Command> {
+    return github.getRepos(lastId)
+        .flatMapPublisher {
+            Flowable.just(
+                Command.LoadingMoreRepos(false),
+                Command.LoadedMoreRepos(it)
+            )
         }
-
-        reduce<Result.LoadedMoreRepos> { state, result ->
-            state.copy(repos = state.repos + result.repos)
+        .onErrorResumeNext { throwable: Throwable ->
+            val error = throwable.message ?: "Failed to load repos"
+            Flowable.just(
+                Command.LoadingMoreRepos(false),
+                Command.AddError(error)
+            )
         }
-
-        reduce<Result.LoadedRepoDetails> { state, result ->
-            state.copy(openRepo = result.repo)
-        }
-
-        reduce<Result.ClosedRepoDetails> { state, _ ->
-            state.copy(openRepo = null)
-        }
-
-        reduce<Result.GotError> { state, result ->
-            state.copy(errors = state.errors + result.error)
-        }
-
-        reduce<Result.RemovedError> { state, result ->
-            state.copy(errors = state.errors.filter { it != result.error })
-        }
-    }
+        .startWith(Command.LoadingMoreRepos(true))
 }

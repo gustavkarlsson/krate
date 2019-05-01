@@ -9,7 +9,7 @@ import se.gustavkarlsson.krate.samples.lanterna.store.store
 import se.gustavkarlsson.krate.samples.lanterna.ui.RepoDetailsWindow
 import se.gustavkarlsson.krate.samples.lanterna.ui.ReposWindow
 
-fun main(args: Array<String>) {
+fun main() {
     val screen = DefaultTerminalFactory().createScreen()
     val gui = MultiWindowTextGUI(screen)
     screen.startScreen()
@@ -36,7 +36,7 @@ fun main(args: Array<String>) {
             }
         }
         .subscribe {
-            store.issue(Command.AcknowledgeError(it))
+            store.issue(Command.RemoveError(it))
             MessageDialog.showMessageDialog(gui, "Error", it)
         }
 

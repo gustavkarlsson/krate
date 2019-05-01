@@ -1,7 +1,7 @@
 package se.gustavkarlsson.krate.samples.tornadofx.ui
 
 import io.reactivex.Flowable
-import se.gustavkarlsson.krate.samples.tornadofx.store.AddTodo
+import se.gustavkarlsson.krate.samples.tornadofx.store.CreateTodo
 import se.gustavkarlsson.krate.samples.tornadofx.store.DeleteTodo
 import se.gustavkarlsson.krate.samples.tornadofx.store.ToggleTodoCompleted
 import se.gustavkarlsson.krate.samples.tornadofx.store.store
@@ -9,7 +9,7 @@ import se.gustavkarlsson.krate.samples.tornadofx.store.store
 class MainViewModel {
 
     fun add(text: String) {
-        store.issue(AddTodo(text))
+        store.issue(CreateTodo(text))
     }
 
     fun toggleCompleted(item: TodoItem) {

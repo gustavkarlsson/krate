@@ -5,23 +5,20 @@ import se.gustavkarlsson.krate.core.Interceptor
 import se.gustavkarlsson.krate.core.Reducer
 import se.gustavkarlsson.krate.core.StateDelegate
 import se.gustavkarlsson.krate.core.Store
-import se.gustavkarlsson.krate.core.Transformer
 
 /**
  * A configuration block for a [Store].
  */
 @StoreDsl
-class StoreBuilder<State : Any, Command : Any, Result : Any>
+class StoreBuilder<State : Any, Command : Any>
 internal constructor(private val stateDelegate: StateDelegate<State>) {
     private var initialState: State?
         get() = stateDelegate.value
         set(value) {
             stateDelegate.value = value
         }
-    private var transformers = mutableListOf<Transformer<Command, Result>>()
-    private var reducers = mutableListOf<Reducer<State, Result>>()
+    private var reducers = mutableListOf<Reducer<State, Command>>()
     private var commandInterceptors = mutableListOf<Interceptor<Command>>()
-    private var resultInterceptors = mutableListOf<Interceptor<Result>>()
     private var stateInterceptors = mutableListOf<Interceptor<State>>()
     private var observeScheduler: Scheduler? = null
 
@@ -32,28 +29,11 @@ internal constructor(private val stateDelegate: StateDelegate<State>) {
      *
      * @param block the code used to configure commands
      */
-    fun commands(block: Commands<Command, Result>.() -> Unit) {
-        Commands<Command, Result>()
+    fun commands(block: Commands<Command>.() -> Unit) {
+        Commands<Command>()
             .also(block)
-            .let {
-                transformers.addAll(it.transformers)
+            .also {
                 commandInterceptors.addAll(it.interceptors)
-            }
-    }
-
-    /**
-     * Configures results for the store.
-     *
-     * At least one reducer should be defined.
-     *
-     * @param block the code used to configure results
-     */
-    fun results(block: Results<State, Result>.() -> Unit) {
-        Results<State, Result>()
-            .also(block)
-            .let {
-                reducers.addAll(it.reducers)
-                resultInterceptors.addAll(it.interceptors)
             }
     }
 
@@ -64,13 +44,14 @@ internal constructor(private val stateDelegate: StateDelegate<State>) {
      *
      * @param block the code used to configure states
      */
-    fun states(block: States<State>.() -> Unit) {
-        States(stateDelegate, observeScheduler)
+    fun states(block: States<State, Command>.() -> Unit) {
+        States<State, Command>(stateDelegate, observeScheduler)
             .also(block)
-            .let {
+            .also {
                 initialState = it.initial
-                observeScheduler = it.observeScheduler
+                reducers.addAll(it.reducers)
                 stateInterceptors.addAll(it.interceptors)
+                observeScheduler = it.observeScheduler
             }
     }
 
@@ -79,30 +60,25 @@ internal constructor(private val stateDelegate: StateDelegate<State>) {
      *
      * @param plugin the plugin to add
      */
-    fun plugin(plugin: StorePlugin<State, Command, Result>) {
+    fun plugin(plugin: StorePlugin<State, Command>) {
         plugin.run {
             initialState = changeInitialState(initialState)
-            transformers = changeTransformers(transformers, stateDelegate::valueUnsafe).toMutableList()
-            reducers = changeReducers(reducers).toMutableList()
+            reducers = changeReducers(reducers, stateDelegate::valueUnsafe).toMutableList()
             commandInterceptors =
                 changeCommandInterceptors(commandInterceptors, stateDelegate::valueUnsafe).toMutableList()
-            resultInterceptors =
-                changeResultInterceptors(resultInterceptors, stateDelegate::valueUnsafe).toMutableList()
-            stateInterceptors = changeStateInterceptors(stateInterceptors).toMutableList()
+            stateInterceptors = changeStateInterceptors(stateInterceptors, stateDelegate::valueUnsafe).toMutableList()
             observeScheduler = changeObserveScheduler(observeScheduler)
         }
     }
 
-    internal fun build(): Store<State, Command, Result> {
+    internal fun build(): Store<State, Command> {
         checkNotNull(stateDelegate.value) {
             "No initial state set. Set the initial state in a states-block in the DSL"
         }
         return Store(
             stateDelegate,
-            transformers,
             reducers,
             commandInterceptors,
-            resultInterceptors,
             stateInterceptors,
             observeScheduler
         )

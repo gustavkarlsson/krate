@@ -1,12 +1,12 @@
 package se.gustavkarlsson.krate.core
 
-internal fun <T : Any, R : Any> Any?.ifObjectInstanceOf(
+internal fun <T : Any, R : Any> Any?.mapIfInstanceOf(
     type: Class<T>,
-    handle: (T) -> R
+    map: (T) -> R
 ): R? {
     return if (type.isInstance(this)) {
         @Suppress("UNCHECKED_CAST")
-        handle(this as T)
+        map(this as T)
     } else {
         null
     }

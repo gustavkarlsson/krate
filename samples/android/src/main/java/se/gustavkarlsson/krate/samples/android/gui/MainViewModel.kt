@@ -3,7 +3,7 @@ package se.gustavkarlsson.krate.samples.android.gui
 import io.reactivex.Flowable
 import io.reactivex.Maybe
 import se.gustavkarlsson.krate.samples.android.krate.NoteStore
-import se.gustavkarlsson.krate.samples.android.krate.StopEditingNote
+import se.gustavkarlsson.krate.samples.android.krate.SaveEditingNote
 
 class MainViewModel(private val store: NoteStore) {
 
@@ -20,6 +20,6 @@ class MainViewModel(private val store: NoteStore) {
         }
 
     fun onNotNavigatingToEditNote() {
-        store.issue(StopEditingNote)
+        store.issue(SaveEditingNote)
     }
 }

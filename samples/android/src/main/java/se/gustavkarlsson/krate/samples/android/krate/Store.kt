@@ -12,38 +12,20 @@ import se.gustavkarlsson.krate.samples.android.database.toDb
 import se.gustavkarlsson.krate.samples.android.database.toEntity
 import se.gustavkarlsson.krate.samples.android.domain.Note
 
-typealias NoteStore = Store<State, Command, Result>
+typealias NoteStore = Store<State, Command>
 
 fun buildStore(dao: NoteDao): NoteStore = buildStore { getState ->
 
     commands {
-        transform<StreamNotes> { commands ->
-            commands
-                .observeOn(Schedulers.io())
+        transform<StreamNotes> {
+            observeOn(Schedulers.io())
                 .flatMap { dao.listAll() }
                 .map { it.map(DbNote::toEntity) }
-                .map(::Notes)
+                .map(::SetNotes)
         }
 
-        transform<StartEditingNote> { commands ->
-            commands
-                .map(StartEditingNote::note)
-                .map(::SetEditingNote)
-        }
-
-        transform<SetEditingNoteTitle> { commands ->
-            commands
-                .map { ChangeEditingNote(title = it.text) }
-        }
-
-        transform<SetEditingNoteContent> { commands ->
-            commands
-                .map { ChangeEditingNote(content = it.text) }
-        }
-
-        transform<StopEditingNote> { commands ->
-            commands
-                .observeOn(Schedulers.io())
+        transform<SaveEditingNote> {
+            observeOn(Schedulers.io())
                 .doOnNext {
                     getState().editingNote?.let { editingNote ->
                         if (editingNote.title.isBlank() && editingNote.content.isBlank()) {
@@ -62,35 +44,15 @@ fun buildStore(dao: NoteDao): NoteStore = buildStore { getState ->
                 .map { SetEditingNote(null) }
         }
 
-        transform<DeleteNote> { commands ->
-            commands
-                .map(DeleteNote::note)
+        transform<DeleteNote> {
+            map(DeleteNote::note)
                 .map(Note::toDb)
                 .observeOn(Schedulers.io())
                 .doOnNext(dao::delete)
-                .flatMap<Result> { Flowable.empty() }
+                .flatMap<Command> { Flowable.empty() }
         }
 
         watchAll { Log.v("NoteStore", "Command: $it") }
-    }
-
-    results {
-        reduce<Notes> { state, (notes) ->
-            state.copy(notes = notes)
-        }
-
-        reduce<SetEditingNote> { state, (note) ->
-            state.copy(editingNote = note)
-        }
-
-        reduce<ChangeEditingNote> { state, (newTitle, newContent) ->
-            state.editingNote?.run {
-                val newNote = copy(title = newTitle ?: title, content = newContent ?: content)
-                state.copy(editingNote = newNote)
-            } ?: state
-        }
-
-        watchAll { Log.v("NoteStore", "Result: $it") }
     }
 
     states {
@@ -98,5 +60,27 @@ fun buildStore(dao: NoteDao): NoteStore = buildStore { getState ->
         observeScheduler = AndroidSchedulers.mainThread()
 
         watchAll { Log.v("NoteStore", "State: $it") }
+
+        reduce<SetNotes> { (notes) ->
+            copy(notes = notes)
+        }
+
+        reduce<SetEditingNote> { (note) ->
+            copy(editingNote = note)
+        }
+
+        reduce<SetEditingNoteTitle> { (newTitle) ->
+            editingNote?.run {
+                val newNote = copy(title = newTitle)
+                copy(editingNote = newNote)
+            } ?: this
+        }
+
+        reduce<SetEditingNoteContent> { (newContent) ->
+            editingNote?.run {
+                val newNote = copy(content = newContent)
+                copy(editingNote = newNote)
+            } ?: this
+        }
     }
 }
